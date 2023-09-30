@@ -1,0 +1,59 @@
+{
+  "name": "form-ui-generator",
+  "productName": "form-ui-generator",
+  "version": "1.0.0",
+  "description": "My Electron application description",
+  "main": ".webpack/main",
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "eslint --ext .ts,.tsx ."
+  },
+  "keywords": [],
+  "author": {
+    "name": "Rúni Vørmadal",
+    "email": "runivormadal@gmail.com"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@electron-forge/cli": "^6.4.1",
+    "@electron-forge/maker-deb": "^6.4.1",
+    "@electron-forge/maker-rpm": "^6.4.1",
+    "@electron-forge/maker-squirrel": "^6.4.1",
+    "@electron-forge/maker-zip": "^6.4.1",
+    "@electron-forge/plugin-auto-unpack-natives": "^6.4.1",
+    "@electron-forge/plugin-webpack": "^6.4.1",
+    "@types/react": "^18.2.21",
+    "@types/react-dom": "^18.2.7",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "@vercel/webpack-asset-relocator-loader": "1.7.3",
+    "css-loader": "^6.0.0",
+    "electron": "26.1.0",
+    "eslint": "^8.0.1",
+    "eslint-plugin-import": "^2.25.0",
+    "fork-ts-checker-webpack-plugin": "^7.2.13",
+    "node-loader": "^2.0.0",
+    "openapi-types": "^12.1.3",
+    "style-loader": "^3.0.0",
+    "ts-loader": "^9.2.2",
+    "ts-node": "^10.0.0",
+    "typescript": "~4.5.4"
+  },
+  "dependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.14.6",
+    "@mui/material": "^5.14.6",
+    "@mui/x-date-pickers": "^6.12.0",
+    "@vormadal/react-mui": "^0.0.2",
+    "date-fns": "^2.30.0",
+    "electron-squirrel-startup": "^1.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.15.0"
+  }
+}
