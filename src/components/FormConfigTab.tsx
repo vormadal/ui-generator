@@ -49,7 +49,17 @@ function FormConfigTab({ active, tab, config }: Props) {
 
   useEffect(() => {
     if (!options) return
-    setPreview(generator.generate(options))
+    setPreview(
+      generator
+        .generate(options)
+        .map(
+          (x) => `// ${x.name}
+    ${x.content}
+
+    `
+        )
+        .join('')
+    )
   }, [generator, options])
 
   const updateForm = useCallback((options: FormOptions) => {

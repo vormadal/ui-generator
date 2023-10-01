@@ -2,6 +2,7 @@ import { ComponentImport } from '../../configuration/ComponentImport'
 import { FieldGenerator } from '../../configuration/FieldGenerator'
 import { FieldOptions } from '../../configuration/FieldOptions'
 import { FormOptions } from '../../configuration/FormOptions'
+import GeneratorContent from '../../configuration/GeneratorContent'
 import { GeneratorOptions } from '../../configuration/GeneratorOptions'
 import { groupBy } from '../../utils/arrayExtensions'
 import DefaultFieldGenerator from '../default/DefaultFieldGenerator'
@@ -22,7 +23,7 @@ export default class RMFFormGenerator {
     return this._fieldGenerators.find((x) => x.name === options.type) || new DefaultFieldGenerator()
   }
 
-  generate(options: GeneratorOptions): string {
+  generate(options: GeneratorOptions): GeneratorContent[] {
     const { name, entityTypeName, entityName, entityPropertyName, hasInitialValues } = options.formOptions
 
     const combinedImports = [
@@ -41,7 +42,7 @@ export default class RMFFormGenerator {
 
     const imports = mergedImports.map((x) => x.toString()).join('\n')
 
-    return `
+    const content = `
 ${imports}
 
 interface Props {
@@ -68,5 +69,7 @@ export function ${name}({ onSubmit${hasInitialValues ? `, ${entityPropertyName}`
 
 export default ${name}
     `
+
+    return [new GeneratorContent('file', content, `components/${name}.tsx`)]
   }
 }

@@ -1,6 +1,7 @@
 import { CodeGenerator } from '../../configuration/CodeGenerator'
 import { FieldOptions } from '../../configuration/FieldOptions'
 import { FormOptions } from '../../configuration/FormOptions'
+import GeneratorContent from '../../configuration/GeneratorContent'
 import { GeneratorOptions } from '../../configuration/GeneratorOptions'
 import { OptionRenderer } from '../../configuration/OptionRenderer'
 import { TextFieldOptions } from '../../configuration/TextFieldOptions'
@@ -35,7 +36,7 @@ export default class ReactMuiFormikGenerator implements CodeGenerator {
     return new FormOptions(schema)
   }
 
-  generate(options: GeneratorOptions): string {
+  generate(options: GeneratorOptions): GeneratorContent[] {
     return this._formGenerator.generate(options)
   }
 }

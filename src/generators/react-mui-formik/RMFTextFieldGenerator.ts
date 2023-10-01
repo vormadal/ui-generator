@@ -1,5 +1,6 @@
 import { ComponentImport } from '../../configuration/ComponentImport'
 import { FieldGenerator } from '../../configuration/FieldGenerator'
+import GeneratorContent from '../../configuration/GeneratorContent'
 import { TextFieldOptions } from '../../configuration/TextFieldOptions'
 
 export default class RMFTextFieldGenerator implements FieldGenerator {
@@ -10,10 +11,10 @@ export default class RMFTextFieldGenerator implements FieldGenerator {
     return [new ComponentImport('@mui/material', ['TextField'])]
   }
 
-  generate(options: TextFieldOptions): string {
+  generate(options: TextFieldOptions): GeneratorContent[] {
     const { name, label, validation } = options
     const { isRequired } = validation
-    return `
+    const content = `
     <TextField
         name="${name}"
         label="${label}"
@@ -22,5 +23,7 @@ export default class RMFTextFieldGenerator implements FieldGenerator {
         ${isRequired ? 'required' : ''}
       />
     `
+
+    return [new GeneratorContent('partial', content)]
   }
 }

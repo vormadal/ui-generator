@@ -1,8 +1,6 @@
-import { Alert } from '@mui/material'
 import { ComponentImport } from '../../configuration/ComponentImport'
 import { FieldGenerator } from '../../configuration/FieldGenerator'
-import { FieldOptions } from '../../configuration/FieldOptions'
-import { OpenApiProperty } from '../../openApi/OpenApiProperty'
+import GeneratorContent from '../../configuration/GeneratorContent'
 
 export default class DefaultFieldGenerator implements FieldGenerator {
   get name(): string {
@@ -13,7 +11,7 @@ export default class DefaultFieldGenerator implements FieldGenerator {
     return []
   }
 
-  generate(): string {
-    return ''
+  generate(): GeneratorContent[] {
+    return [new GeneratorContent('partial', '')]
   }
 }
