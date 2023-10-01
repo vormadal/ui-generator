@@ -1,14 +1,14 @@
 import { OpenAPIV3 } from 'openapi-types'
-import { ExtendedOperationObject } from './ExtendedOperationObject'
 
 export class OpenApiProperty {
   constructor(
-    public readonly schema: OpenAPIV3.SchemaObject,
+    public readonly source: OpenAPIV3.SchemaObject,
     public readonly name: string,
-    public readonly operation: ExtendedOperationObject
+    public readonly path: string,
+    public readonly method: OpenAPIV3.HttpMethods
   ) {}
 
   get type() {
-    return this.schema.type as OpenAPIV3.NonArraySchemaObjectType
+    return this.source.type as OpenAPIV3.NonArraySchemaObjectType
   }
 }

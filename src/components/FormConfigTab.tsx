@@ -34,9 +34,8 @@ function FormConfigTab({ active, tab, config }: Props) {
       if (existing) {
         setOptions(existing)
       } else {
-        const properties = config.schema.getFormProperties(config)
         setOptions({
-          fieldOptions: properties.map((x) => new TextFieldOptions(x)),
+          fieldOptions: config.properties.map((x) => new TextFieldOptions(x)),
           formOptions: new FormOptions(config)
         })
       }

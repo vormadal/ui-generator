@@ -7,7 +7,9 @@ import { TextFieldOptions } from '../../configuration/TextFieldOptions'
 import { UnknownFieldOptions } from '../../configuration/UnknownFieldOptions'
 import { ExtendedOperationObject } from '../../openApi/ExtendedOperationObject'
 import { OpenApiProperty } from '../../openApi/OpenApiProperty'
+import RMFFormGenerator from './RMFFormGenerator'
 import { RMFOptionRenderer } from './RMFOptionRenderer'
+import RMFTextFieldGenerator from './RMFTextFieldGenerator'
 
 export default class ReactMuiFormikGenerator implements CodeGenerator {
   get name(): string {
@@ -15,6 +17,8 @@ export default class ReactMuiFormikGenerator implements CodeGenerator {
   }
 
   private readonly _renderer = new RMFOptionRenderer()
+  private readonly _formGenerator = new RMFFormGenerator([new RMFTextFieldGenerator()])
+
   get renderer(): OptionRenderer {
     return this._renderer
   }
@@ -32,7 +36,6 @@ export default class ReactMuiFormikGenerator implements CodeGenerator {
   }
 
   generate(options: GeneratorOptions): string {
-    
-    return 'not implemented'
+    return this._formGenerator.generate(options)
   }
 }

@@ -1,9 +1,14 @@
 import { ComponentImport } from '../../configuration/ComponentImport'
 import { FieldGenerator } from '../../configuration/FieldGenerator'
+import { FieldOptions } from '../../configuration/FieldOptions'
 import { FormOptions } from '../../configuration/FormOptions'
+import { GeneratorOptions } from '../../configuration/GeneratorOptions'
 import { groupBy } from '../../utils/arrayExtensions'
+import DefaultFieldGenerator from '../default/DefaultFieldGenerator'
 
 export default class RMFFormGenerator {
+  constructor(private readonly _fieldGenerators: FieldGenerator[]) {}
+
   getImports(options: FormOptions): ComponentImport[] {
     const values = [
       new ComponentImport('formik', ['Formik', 'Form']),
@@ -13,12 +18,18 @@ export default class RMFFormGenerator {
     return values
   }
 
-  generate(options: FormOptions, properties: FieldGenerator[]): string {
-    const { name, entityTypeName, entityName, entityPropertyName, hasInitialValues } = options
+  getFieldGenerator(options: FieldOptions): FieldGenerator {
+    return this._fieldGenerators.find((x) => x.name === options.type) || new DefaultFieldGenerator()
+  }
+
+  generate(options: GeneratorOptions): string {
+    const { name, entityTypeName, entityName, entityPropertyName, hasInitialValues } = options.formOptions
 
     const combinedImports = [
-      ...this.getImports(options),
-      ...([] as ComponentImport[]).concat(...properties.map((x) => x.imports))
+      ...this.getImports(options.formOptions),
+      ...([] as ComponentImport[]).concat(
+        ...options.fieldOptions.map((fieldOption) => this.getFieldGenerator(fieldOption).imports)
+      )
     ]
 
     const groupedImports = groupBy(combinedImports, (x) => x.from)
@@ -47,7 +58,7 @@ export function ${name}({ onSubmit${hasInitialValues ? `, ${entityPropertyName}`
     >
       {({ values, handleChange, handleBlur }) => (
         <Form>
-          ${properties.map((x) => x.generate())}
+          ${options.fieldOptions.map((x) => this.getFieldGenerator(x).generate(x))}
           <Button type="submit">${hasInitialValues ? 'Save' : 'Create'}</Button>
         </Form>
       )}

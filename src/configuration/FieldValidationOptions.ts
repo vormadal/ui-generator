@@ -4,6 +4,6 @@ export class FieldValidationOptions {
   isRequired: boolean
 
   constructor(property: OpenApiProperty) {
-    this.isRequired = property.schema.required?.includes(property.name)
+    this.isRequired = property.source.required?.includes(property.name)
   }
 }

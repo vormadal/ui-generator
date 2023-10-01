@@ -1,10 +1,12 @@
 import { OpenAPIV3 } from 'openapi-types'
-import OpenApiSchema from './OpenApiSchema'
+import { OpenApiProperty } from './OpenApiProperty'
 
 export interface ExtendedOperationObject {
+  source: OpenAPIV3.OperationObject | undefined
+
   method: OpenAPIV3.HttpMethods
-  content: OpenAPIV3.OperationObject | undefined
   path: string
   group: string
-  schema: OpenApiSchema
+
+  properties: OpenApiProperty[]
 }
