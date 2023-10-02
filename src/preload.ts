@@ -2,9 +2,8 @@
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
 import { contextBridge, ipcRenderer } from 'electron'
-import { GeneratorOptions } from './configuration/GeneratorOptions'
-import SystemConfiguration from './system/SystemConfiguration'
 import ProjectConfiguration from './system/ProjectConfiguration'
+import SystemConfiguration from './system/SystemConfiguration'
 
 contextBridge.exposeInMainWorld('electronAPI', {
   getSystemConfiguration: async () => ipcRenderer.invoke('config:system:get'),
@@ -13,7 +12,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getProject: async (id: string) => ipcRenderer.invoke('config:project:get', id),
   saveProject: async (config: ProjectConfiguration) => ipcRenderer.invoke('config:project:save', config),
 
-  selectProject: async () => ipcRenderer.invoke('dialog:selectProject'),
-  getFormData: async (id: string) => ipcRenderer.invoke('load:form', id),
-  saveFormData: async (form: GeneratorOptions) => ipcRenderer.invoke('save:form', form)
+  selectFile: async () => ipcRenderer.invoke('dialog:select:file'),
+  selectDirectory: async () => ipcRenderer.invoke('dialog:select:directory'),
+
+  readFile: async (path: string) => ipcRenderer.invoke('file:read', path),
+  writeFile: async (path: string, content: string) => ipcRenderer.invoke('file:write', path, content)
 })

@@ -28,23 +28,13 @@ function FormConfigTab({ active, tab, config }: Props) {
     }
 
     async function loadOptions() {
-      const formOptions = new FormOptions(config)
-      const existing = await window.electronAPI.getFormData(formOptions.id)
-
-      if (existing) {
-        setOptions(existing)
-      } else {
-        setOptions({
-          fieldOptions: config.properties.map((x) => new TextFieldOptions(x)),
-          formOptions: new FormOptions(config)
-        })
-      }
+      setOptions({
+        fieldOptions: config.properties.map((x) => new TextFieldOptions(x)),
+        formOptions: new FormOptions(config)
+      })
     }
 
     loadOptions()
-    return () => {
-      window.electronAPI.saveFormData(options)
-    }
   }, [generator, options])
 
   useEffect(() => {

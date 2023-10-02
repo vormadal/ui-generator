@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { MemoryRouter as Router } from 'react-router-dom'
 import FormConfigTab from './components/FormConfigTab'
 import Project from './components/Project'
-import { SchemaProvider, useSchema } from './contexts/SchemaContext'
+import { ProjectProvider, useProject } from './contexts/ProjectContext'
 import { theme } from './utils/theme'
 import { GeneratorProvider } from './contexts/GeneratorContext'
 import { FormOptions } from './configuration/FormOptions'
@@ -15,22 +15,22 @@ import { ExtendedOperationObject } from './openApi/ExtendedOperationObject'
 generators.configure(new ReactMuiFormikGenerator())
 
 function App() {
-  const [schema] = useSchema()
+  const [project] = useProject()
   const [activeGroup, setActiveGroup] = useState('')
   const [groupTab, setGroupTab] = useState(0)
   const [formTab, setFormTab] = useState(0)
   const [forms, setForms] = useState<ExtendedOperationObject[]>([])
 
   useEffect(() => {
-    if (!schema.groupNames.length) return
-    setActiveGroup(schema.groupNames[0])
-  }, [schema])
+    if (!project?.schema?.groupNames?.length) return
+    setActiveGroup(project?.schema.groupNames[0])
+  }, [project])
 
   useEffect(() => {
     if (!activeGroup) return
-    setForms(schema?.getGroupItems(activeGroup))
+    setForms(project?.schema?.getGroupItems(activeGroup))
     setFormTab(0)
-  }, [schema, activeGroup])
+  }, [project, activeGroup])
 
   return (
     <Grid container>
@@ -49,7 +49,7 @@ function App() {
           value={groupTab}
           onChange={(e, v) => setGroupTab(v)}
         >
-          {schema.groupNames.map((x) => (
+          {project?.schema?.groupNames?.map((x) => (
             <Tab
               key={x}
               onClick={() => setActiveGroup(x)}
@@ -95,9 +95,9 @@ function AppWithProviders() {
     <ThemeProvider theme={theme}>
       <GeneratorProvider>
         <Router>
-          <SchemaProvider>
+          <ProjectProvider>
             <App />
-          </SchemaProvider>
+          </ProjectProvider>
         </Router>
       </GeneratorProvider>
     </ThemeProvider>

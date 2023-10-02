@@ -144,23 +144,13 @@ export default class OpenApiSchema {
   //TODO we should probably support more than just json
   private _mediaType = 'application/json'
 
-  // private readonly _client = axios.create({
-  //   // withCredentials: true,
-  //   headers: {
-  //     'Access-Control-Allow-Credentials': true
-  //   }
-  // })
-
   private _data?: OpenAPIV3.Document = test as OpenAPIV3.Document
   private _paths: ExtendedOperationObject[] = []
   private _components: Map<string, OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject | OpenAPIV3.RequestBodyObject> =
     new Map()
 
-  async load(url: string): Promise<void> {
-    // const result = await this._client.get(url)
-  }
-
-  constructor() {
+  constructor(openapiSpec: OpenAPIV3.Document) {
+    this._data = openapiSpec
     this._components = getSchemaComponents(this._data)
     this._paths = getOperations(this._data, this._components, this._mediaType)
   }

@@ -12,28 +12,20 @@ import {
   SelectChangeEvent,
   TextField
 } from '@mui/material'
-import { ChangeEvent, useEffect, useState } from 'react'
-import { CodeGenerator } from '../configuration/CodeGenerator'
+import React, { useEffect, useState } from 'react'
 import { useGenerator } from '../contexts/GeneratorContext'
 import generators from '../generators'
-import SystemConfiguration from '../system/SystemConfiguration'
 import ProjectConfiguration from '../system/ProjectConfiguration'
+import SystemConfiguration from '../system/SystemConfiguration'
+import { useProject } from '../contexts/ProjectContext'
+import OpenApiSchema from '../openApi/OpenApiSchema'
+import { useGeneratorOptions } from '../contexts/GeneratorOptionsContext'
 
 function Project() {
   const [systemConfig, setSystemConfig] = useState<SystemConfiguration>()
-  const [project, setProject] = useState<ProjectConfiguration>()
   const [generator, setGenerator] = useGenerator()
-
-  async function handleProjectChange(e: SelectChangeEvent) {
-    const projectRef = systemConfig.projects.find((x) => x.id === e.target.value)
-    const project = await window.electronAPI.getProject(projectRef.id)
-    setProject(project)
-    setSystemConfig((x) => ({ ...x, lastProject: project.id }))
-  }
-  async function handleProjectDirectoryChange() {
-    const filePath = await window.electronAPI.selectProject()
-    setProject((x) => ({ ...x, projectDirectory: filePath }))
-  }
+  const [project, setProject] = useProject()
+  const [options] = useGeneratorOptions()
 
   async function handleProjectNameChange(e: React.ChangeEvent<HTMLInputElement>) {
     setProject((x) => ({ ...x, name: e.target.value }))
@@ -58,29 +50,50 @@ function Project() {
     }
 
     initialize()
-
-    async function save() {
-      if (systemConfig) window.electronAPI.saveSystemConfiguration(systemConfig)
-      if (project) window.electronAPI.saveProject(project)
-    }
-
-    const handle = setInterval(save, 30000)
-
-    return () => {
-      if (systemConfig) window.electronAPI.saveSystemConfiguration(systemConfig)
-      if (project) window.electronAPI.saveProject(project)
-      clearInterval(handle)
-    }
   }, [])
 
+  useEffect(() => {
+    if (project && project.selectedGenerator !== generator?.name) {
+      setGenerator(generators.options.find((x) => x.name === project.selectedGenerator))
+    }
+  }, [project?.selectedGenerator])
+
+  async function handleProjectChange(e: SelectChangeEvent) {
+    const projectRef = systemConfig.projects.find((x) => x.id === e.target.value)
+    const project = await window.electronAPI.getProject(projectRef.id)
+    setProject(project)
+    setSystemConfig((x) => ({ ...x, lastProject: project.id }))
+  }
+
+  async function handleProjectDirectoryChange() {
+    const filePath = await window.electronAPI.selectDirectory()
+    setProject((x) => ({ ...x, projectDirectory: filePath }))
+  }
+
   async function handleGenerate() {
-    // await window.electronAPI.writeFiles()
+    const files = generator.generate(options)
   }
 
   async function handleCreateProject() {
     const project = new ProjectConfiguration()
     setSystemConfig((x) => ({ ...x, projects: [...x.projects, project] }))
     setProject(project)
+  }
+
+  async function handleUpdateSpecDefinition() {
+    const file = await window.electronAPI.selectFile()
+    const content = await window.electronAPI.readFile(file)
+    const spec = JSON.parse(content)
+    setProject((x) => ({ ...x, openapiSpecPath: file, schema: new OpenApiSchema(spec) }))
+  }
+
+  async function handleSave() {
+    if (systemConfig) window.electronAPI.saveSystemConfiguration(systemConfig)
+    if (project) window.electronAPI.saveProject(project)
+  }
+
+  async function handleGeneratorChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setProject((x) => ({ ...x, selectedGenerator: e.target.value }))
   }
 
   return (
@@ -120,7 +133,14 @@ function Project() {
         <Grid
           item
           xs={6}
-        />
+        >
+          <Button
+            variant="contained"
+            onClick={handleSave}
+          >
+            Save
+          </Button>
+        </Grid>
       </Grid>
       <Collapse in={!!project}>
         <Grid
@@ -134,7 +154,7 @@ function Project() {
           >
             <TextField
               fullWidth
-              value={project?.name}
+              value={project?.name || ''}
               onChange={handleProjectNameChange}
             />
             <TextField
@@ -169,7 +189,10 @@ function Project() {
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton edge="end">
+                    <IconButton
+                      edge="end"
+                      onClick={handleUpdateSpecDefinition}
+                    >
                       <Search />
                     </IconButton>
                   </InputAdornment>
@@ -190,7 +213,7 @@ function Project() {
                 labelId="select-generator-label"
                 id="select-generator"
                 value={generator?.name ?? ''}
-                onChange={(e) => setGenerator(generators.options.find((x) => x.name === e.target.value))}
+                onChange={handleGeneratorChange}
               >
                 {generators.options.map((x) => (
                   <MenuItem
