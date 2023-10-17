@@ -20,6 +20,15 @@ import OpenApiSchema from '../openApi/OpenApiSchema'
 import ProjectConfiguration from '../system/ProjectConfiguration'
 import SystemConfiguration from '../system/SystemConfiguration'
 
+function formatPath(path: string){
+  const delimiter = path.includes('/') ? '/' : '\\'
+
+  const end = path.substring(path.lastIndexOf(delimiter)+1);
+  const start = path.substring(0, path.indexOf(delimiter, 5))
+
+  return `${start}\\..\\${end}`
+}
+
 function Project() {
   const [systemConfig, setSystemConfig] = useState<SystemConfiguration>()
   const [generator, setGenerator] = useGenerator()
@@ -171,7 +180,7 @@ function Project() {
             <TextField
               disabled
               fullWidth
-              value={project?.projectDirectory || ''}
+              value={formatPath(project?.projectDirectory || '')}
               label="Project Directory"
               placeholder="Path"
               InputProps={{
@@ -194,7 +203,7 @@ function Project() {
           >
             <TextField
               fullWidth
-              value={project?.openapiSpecPath || ''}
+              value={formatPath(project?.openapiSpecPath || '')}
               label="OpenAPI definition"
               placeholder="File or URL"
               InputProps={{

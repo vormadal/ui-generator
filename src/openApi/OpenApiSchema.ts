@@ -1,4 +1,4 @@
-import { OpenAPIV3 } from 'openapi-types'
+import { OpenAPIV2, OpenAPIV3 } from 'openapi-types'
 import { FieldOptions } from '../configuration/FieldOptions'
 import { FormOptions } from '../configuration/FormOptions'
 import test from './test.json'
@@ -23,7 +23,7 @@ function getFormOptions(
       const source = schema.paths[path][method]
       const properties = getOperationProperties(components, source, path, method, generator)
       const resolveReference = <T>(ref: OpenAPIV3.ReferenceObject | T) => resolveReferenceObject<T>(components, ref)
-      if (generator.supportsView(method, source)) {
+      if (generator.supportsView(method)) {
         const form = new FormOptions(path, method, source, properties, resolveReference)
         //TODO this is a temporary ugly fix
         if (form.entityTypeName !== 'Unknown') endpoints.push(form)
@@ -46,7 +46,7 @@ function getOperationProperties(
 
   const content = resolveReferenceObject<OpenAPIV3.SchemaObject>(
     components,
-    requestBody.content['application/json'].schema
+    requestBody?.content['application/json']?.schema
   )
 
   if (content?.type !== 'object' || !content?.properties) {
@@ -102,9 +102,7 @@ function resolveReferenceObject<T>(components: SchemaComponentMap, obj?: T | Ope
 
 export default class OpenApiSchema {
   private _formMethods = [OpenAPIV3.HttpMethods.PUT, OpenAPIV3.HttpMethods.POST]
-  //TODO we should probably support more than just json
-  private _mediaType = 'application/json'
-
+  
   private _data?: OpenAPIV3.Document = test as OpenAPIV3.Document
   private _paths: FormOptions[] = []
   private _components: Map<string, OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject | OpenAPIV3.RequestBodyObject> =
@@ -114,6 +112,12 @@ export default class OpenApiSchema {
     this._data = openapiSpec
     this._components = getSchemaComponents(this._data)
     this._paths = getFormOptions(this._data, this._components, generator)
+
+    const version = openapiSpec.openapi || (openapiSpec as unknown as OpenAPIV2.Document).swagger
+    if (!version.startsWith('3.0')) {
+      
+      console.warn('unsupported OpenAPI version', version)
+    }
   }
 
   get paths(): FormOptions[] {

@@ -6,20 +6,21 @@ import { OptionRenderer } from '../../configuration/OptionRenderer'
 import RMFFormGenerator from './RMFFormGenerator'
 import { RMFOptionRenderer } from './RMFOptionRenderer'
 import RMFTextFieldGenerator from './RMFTextFieldGenerator'
+import RMFBooleanFieldGenerator from './RMFBooleanFieldGenerator'
 
 export default class ReactMuiFormikGenerator implements CodeGenerator {
-  supportsView(method: OpenAPIV3.HttpMethods, operation: OpenAPIV3.OperationObject): boolean {
-    return [OpenAPIV3.HttpMethods.POST, OpenAPIV3.HttpMethods.PUT].includes(method)
+  supportsView(method: OpenAPIV3.HttpMethods): boolean {
+    return [OpenAPIV3.HttpMethods.POST, OpenAPIV3.HttpMethods.PUT, OpenAPIV3.HttpMethods.GET].includes(method)
   }
   supportsField(type: 'array' | OpenAPIV3.NonArraySchemaObjectType): boolean {
-    return ['string'].includes(type)
+    return ['string', 'boolean'].includes(type)
   }
   get name(): string {
     return 'react-mui-formik'
   }
 
   private readonly _renderer = new RMFOptionRenderer()
-  private readonly _formGenerator = new RMFFormGenerator([new RMFTextFieldGenerator()])
+  private readonly _formGenerator = new RMFFormGenerator([new RMFTextFieldGenerator(), new RMFBooleanFieldGenerator()])
 
   get renderer(): OptionRenderer {
     return this._renderer

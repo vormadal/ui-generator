@@ -11,6 +11,6 @@ export interface CodeGenerator {
   get renderer(): OptionRenderer
   generate(options: FormOptions[]): GeneratorContent[]
 
-  supportsView(method: OpenAPIV3.HttpMethods, operation: OpenAPIV3.OperationObject): boolean
+  supportsView(method: OpenAPIV3.HttpMethods): boolean
   supportsField(type: OpenAPIV3.ArraySchemaObjectType | OpenAPIV3.NonArraySchemaObjectType): boolean
 }

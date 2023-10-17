@@ -12,6 +12,7 @@ export class RMFOptionRenderer implements OptionRenderer {
   private readonly _fieldRenderer = ({ options, onChange }: RendererProps<FieldOptions>) => {
     switch (options.type) {
       case 'string':
+      case 'boolean':
         return (
           <DefaultTextFieldConfiguration
             key={options.id}
@@ -19,6 +20,7 @@ export class RMFOptionRenderer implements OptionRenderer {
             onChange={onChange}
           />
         )
+
       default:
         return <UnknownFieldConfiguration options={options} />
     }

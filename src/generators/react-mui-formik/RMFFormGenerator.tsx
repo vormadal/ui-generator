@@ -19,6 +19,7 @@ export default class RMFFormGenerator {
   }
 
   getFieldGenerator(options: FieldOptions): FieldGenerator {
+    console.log('get type', options.type)
     return this._fieldGenerators.find((x) => x.name === options.type) || new DefaultFieldGenerator()
   }
 
@@ -42,7 +43,10 @@ export default class RMFFormGenerator {
     const imports = mergedImports.map((x) => x.toString()).join('\n')
 
     const fieldIndents = 5
-    const fields = [...new Set(...options.fieldOptions.map((x) => this.getFieldGenerator(x).generate(x, fieldIndents)))]
+
+    const fields = ([] as GeneratorContent[]).concat(
+      ...options.fieldOptions.map((x) => this.getFieldGenerator(x).generate(x, fieldIndents))
+    )
     const content = `
 ${imports}
 
@@ -60,7 +64,7 @@ export function ${name}({ onSubmit${hasInitialValues ? `, ${entityPropertyName}`
     >
       {({ values, handleChange, handleBlur }) => (
         <Form>
-${fields.map((x) => x.content)}
+${fields.map((x) => x.content).join('\n')}
           <Button type="submit">${hasInitialValues ? 'Save' : 'Create'}</Button>
         </Form>
       )}
