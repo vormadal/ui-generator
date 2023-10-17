@@ -15,7 +15,7 @@ export class FieldOptions {
     public readonly method: OpenAPIV3.HttpMethods,
     public readonly name: string,
     public readonly source: OpenAPIV3.SchemaObject,
-    public readonly type: OpenAPIV3.NonArraySchemaObjectType | 'unknown'
+    public readonly type: OpenAPIV3.ArraySchemaObjectType | OpenAPIV3.NonArraySchemaObjectType | 'unknown'
   ) {
     this.label = FirstUppercase(name)
     this.ignore = ['_id', 'id'].includes(name)

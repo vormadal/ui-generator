@@ -58,29 +58,43 @@ export class FormOptions {
   ) {
     this.group = stripPathParams(path)
     this.parameters = source.parameters?.map((x) => resolveReference<OpenAPIV3.ParameterObject>(x)) ?? []
+
     const response = resolveReference<OpenAPIV3.ResponseObject>(source.responses && source.responses[200])
-    const responseRef = response.content && response.content['application/json']
+    const responseRef = response?.content && response.content['application/json']
     const responseContent = resolveReference<OpenAPIV3.SchemaObject>(responseRef)
 
-    const ref =
-      (source.requestBody as OpenAPIV3.ReferenceObject)?.$ref ??
-      (responseRef?.schema as OpenAPIV3.ReferenceObject)?.$ref
+    const request = resolveReference<OpenAPIV3.RequestBodyObject>(source.requestBody)
+    const requestRef = request?.content && request.content['application/json']
+    const requestContent = resolveReference<OpenAPIV3.SchemaObject>(requestRef)
+
+    let ref = (responseRef?.schema as OpenAPIV3.ReferenceObject)?.$ref
+    let content = responseContent
+
+    if ([OpenAPIV3.HttpMethods.POST, OpenAPIV3.HttpMethods.PUT].includes(method)) {
+      ref = (requestRef?.schema as OpenAPIV3.ReferenceObject)?.$ref
+      content = requestContent
+    }
 
     this.entityTypeName = getEntityTypeName(ref)
     this.entityName = getEntityName(ref)
 
-    this.name = resolveViewName(method, this.entityName, responseContent)
+    this.name = resolveViewName(method, this.entityName, content)
 
     this.id = `${method}:${path}`
   }
 }
 
-function resolveViewName(method: OpenAPIV3.HttpMethods, entityName: string, responseContent: OpenAPIV3.SchemaObject) {
+function resolveViewName(method: OpenAPIV3.HttpMethods, entityName: string, content: OpenAPIV3.SchemaObject) {
   let prefix = ''
   let suffix = ''
+  let name = FirstUppercase(entityName)
+  if (name.endsWith('Dto')) {
+    name = name.substring(0, name.length - 3)
+  }
+
   switch (method) {
     case OpenAPIV3.HttpMethods.GET:
-      prefix = responseContent.type == 'array' ? 'List' : 'Detail'
+      prefix = content.type == 'array' ? 'List' : 'Detail'
       suffix = 'View'
       break
     case OpenAPIV3.HttpMethods.POST:
@@ -96,11 +110,8 @@ function resolveViewName(method: OpenAPIV3.HttpMethods, entityName: string, resp
       suffix = 'View'
       break
   }
-
-  let name = FirstUppercase(entityName)
-  if (name.endsWith('Dto')) {
-    name = name.substring(0, name.length - 3)
-  }
+  if (name.startsWith(prefix)) prefix = ''
+  if (name.endsWith(suffix)) suffix = ''
 
   return `${prefix}${name}${suffix}`
 }

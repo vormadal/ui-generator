@@ -42,9 +42,10 @@ function Project() {
       const config = await window.electronAPI.getSystemConfiguration()
       if (config.lastProject) {
         const project = await window.electronAPI.getProject(config.lastProject)
-        if (project.spec) {
+        if (project.spec && project.selectedGenerator) {
+          const generator = generators.options.find(x => x.name === project.selectedGenerator)
           //TODO fix this - data stored in files should be simple - not containing any functions etc
-          project.schema = new OpenApiSchema(project.spec)
+          project.schema = new OpenApiSchema(project.spec, generator)
         }
         setProject(project)
       }
@@ -63,10 +64,11 @@ function Project() {
   async function handleProjectChange(e: SelectChangeEvent) {
     const projectRef = systemConfig.projects.find((x) => x.id === e.target.value)
     const project = await window.electronAPI.getProject(projectRef.id)
-    if (project.spec) {
-      //TODO fix this - data stored in files should be simple - not containing any functions etc
-      project.schema = new OpenApiSchema(project.spec)
-    }
+    if (project.spec && project.selectedGenerator) {
+          const generator = generators.options.find(x => x.name === project.selectedGenerator)
+          //TODO fix this - data stored in files should be simple - not containing any functions etc
+          project.schema = new OpenApiSchema(project.spec, generator)
+        }
     setProject(project)
     setSystemConfig((x) => ({ ...x, lastProject: project.id }))
   }
@@ -93,7 +95,7 @@ function Project() {
     const file = await window.electronAPI.selectFile()
     const content = await window.electronAPI.readFile(file)
     const spec = JSON.parse(content)
-    setProject((x) => ({ ...x, openapiSpecPath: file, spec, schema: new OpenApiSchema(spec) }))
+    setProject((x) => ({ ...x, openapiSpecPath: file, spec, schema: new OpenApiSchema(spec, generator) }))
   }
 
   async function handleSave() {

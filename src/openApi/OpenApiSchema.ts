@@ -2,11 +2,16 @@ import { OpenAPIV3 } from 'openapi-types'
 import { FieldOptions } from '../configuration/FieldOptions'
 import { FormOptions } from '../configuration/FormOptions'
 import test from './test.json'
+import { CodeGenerator } from '../configuration/CodeGenerator'
 
 type AnySchema = OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject | OpenAPIV3.RequestBodyObject
 type SchemaComponentMap = Map<string, AnySchema>
 
-function getFormOptions(schema: OpenAPIV3.Document, components: SchemaComponentMap, mediaType: string): FormOptions[] {
+function getFormOptions(
+  schema: OpenAPIV3.Document,
+  components: SchemaComponentMap,
+  generator: CodeGenerator
+): FormOptions[] {
   if (!schema?.paths) return
 
   const paths = Object.keys(schema.paths)
@@ -16,9 +21,13 @@ function getFormOptions(schema: OpenAPIV3.Document, components: SchemaComponentM
 
     for (const method of methods) {
       const source = schema.paths[path][method]
-      const properties = getOperationProperties(components, source, 'application/json', path, method)
+      const properties = getOperationProperties(components, source, path, method, generator)
       const resolveReference = <T>(ref: OpenAPIV3.ReferenceObject | T) => resolveReferenceObject<T>(components, ref)
-      endpoints.push(new FormOptions(path, method, source, properties, resolveReference))
+      if (generator.supportsView(method, source)) {
+        const form = new FormOptions(path, method, source, properties, resolveReference)
+        //TODO this is a temporary ugly fix
+        if (form.entityTypeName !== 'Unknown') endpoints.push(form)
+      }
     }
   }
 
@@ -28,14 +37,17 @@ function getFormOptions(schema: OpenAPIV3.Document, components: SchemaComponentM
 function getOperationProperties(
   components: SchemaComponentMap,
   operation: OpenAPIV3.OperationObject,
-  mediaType: string,
   path: string,
-  method: OpenAPIV3.HttpMethods
+  method: OpenAPIV3.HttpMethods,
+  generator: CodeGenerator
 ): FieldOptions[] {
   const requestBody = resolveReferenceObject<OpenAPIV3.RequestBodyObject>(components, operation?.requestBody)
   if (!requestBody) return []
 
-  const content = resolveReferenceObject<OpenAPIV3.SchemaObject>(components, requestBody.content[mediaType].schema)
+  const content = resolveReferenceObject<OpenAPIV3.SchemaObject>(
+    components,
+    requestBody.content['application/json'].schema
+  )
 
   if (content?.type !== 'object' || !content?.properties) {
     //TODO handle array and simple types or is this ever relevant?
@@ -46,9 +58,9 @@ function getOperationProperties(
   for (const propName of Object.keys(content?.properties || {})) {
     const prop = resolveReferenceObject<OpenAPIV3.SchemaObject>(components, content?.properties[propName])
 
-    if (prop.type) {
+    if (generator.supportsField(prop.type)) {
       //TODO verify if type is correct
-      properties.push(new FieldOptions(path, method, propName, prop, prop.type as any))
+      properties.push(new FieldOptions(path, method, propName, prop, prop.type))
     }
   }
   return properties
@@ -98,10 +110,10 @@ export default class OpenApiSchema {
   private _components: Map<string, OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject | OpenAPIV3.RequestBodyObject> =
     new Map()
 
-  constructor(openapiSpec: OpenAPIV3.Document) {
+  constructor(openapiSpec: OpenAPIV3.Document, generator: CodeGenerator) {
     this._data = openapiSpec
     this._components = getSchemaComponents(this._data)
-    this._paths = getFormOptions(this._data, this._components, this._mediaType)
+    this._paths = getFormOptions(this._data, this._components, generator)
   }
 
   get paths(): FormOptions[] {
