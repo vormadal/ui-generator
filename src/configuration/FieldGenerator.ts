@@ -5,5 +5,5 @@ import GeneratorContent from './GeneratorContent'
 export interface FieldGenerator {
   get name(): string
   get imports(): ComponentImport[]
-  generate(options: FieldOptions): GeneratorContent[]
+  generate(options: FieldOptions, indents: number): GeneratorContent[]
 }

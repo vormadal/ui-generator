@@ -1,20 +1,18 @@
 import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material'
 import { Checkbox, Collapse, FormControlLabel, Grid, TextField, Typography } from '@mui/material'
 import { useState } from 'react'
-import { TextFieldOptions } from '../../configuration/TextFieldOptions'
-import { useGeneratorOptions } from '../../contexts/GeneratorOptionsContext'
-import { ExpandMore } from '../ExpandMore'
+import { FieldOptions } from '../../configuration/FieldOptions'
 import { useField } from '../../hooks/useField'
+import { ExpandMore } from '../ExpandMore'
 
 interface Props {
   id: string
-  onChange: (options: TextFieldOptions) => void
+  onChange: (options: FieldOptions) => void
 }
 
 function DefaultTextFieldConfiguration({ id }: Props) {
-  const [value, update] = useField<TextFieldOptions>(id)
-  const { name, label, validation } = value || {}
-  const { isRequired } = validation || {}
+  const [value, update] = useField<FieldOptions>(id)
+  const { name, label, isRequired } = value || {}
   const [expand, setExpand] = useState(false)
 
   function updateLabel(v: string) {
@@ -23,7 +21,7 @@ function DefaultTextFieldConfiguration({ id }: Props) {
   }
 
   function updateIsRequired(v: boolean) {
-    value.validation.isRequired = v
+    value.isRequired = v
     update(value)
   }
 

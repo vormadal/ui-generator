@@ -1,20 +1,24 @@
 import { OpenAPIV3 } from 'openapi-types'
-import { OpenApiProperty } from '../openApi/OpenApiProperty'
 import { FirstUppercase } from '../utils/stringHelpers'
 
 export class FieldOptions {
-  id: string
-  name: string
   label: string
   ignore: boolean
+  isRequired: boolean
+
+  get id() {
+    return `${this.method}-${this.path}-${this.name}`
+  }
 
   constructor(
-    protected readonly property: OpenApiProperty,
+    public readonly path: string,
+    public readonly method: OpenAPIV3.HttpMethods,
+    public readonly name: string,
+    public readonly source: OpenAPIV3.SchemaObject,
     public readonly type: OpenAPIV3.NonArraySchemaObjectType | 'unknown'
   ) {
-    this.id = `${property.method}-${property.path}-${property.name}`
-    this.name = property.name
-    this.label = FirstUppercase(property.name)
-    this.ignore = ['_id', 'id'].includes(property.name)
+    this.label = FirstUppercase(name)
+    this.ignore = ['_id', 'id'].includes(name)
+    this.isRequired = (source.required || []).includes(name)
   }
 }

@@ -1,5 +1,4 @@
 import { app } from 'electron'
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import path from 'path'
 
 import ProjectConfiguration from '../system/ProjectConfiguration'
@@ -17,19 +16,13 @@ class ProjectConfigurationActions {
 
   handleGet = async (e: Electron.IpcMainInvokeEvent, id: string): Promise<ProjectConfiguration> => {
     const location = this.getPath(id)
-    const content = await readFilePromise(location)
-    return JSON.parse(content)
+    const json = await readFilePromise(location)
+    return JSON.parse(json)
   }
 
   handleSave = async (e: Electron.IpcMainInvokeEvent, config: ProjectConfiguration): Promise<void> => {
-    console.log('saving project', config)
     if (!config) return
     const location = this.getPath(config.id)
-    // const dir = location.substring(0, location.lastIndexOf('/'))
-    // console.log('dir', dir)
-    // if (!existsSync(dir)) {
-    //   mkdirSync(dir, { recursive: true })
-    // }
     await writeFilePromise(location, JSON.stringify(config))
   }
 }

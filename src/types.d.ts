@@ -1,8 +1,7 @@
-import { GeneratorOptions } from './configuration/GeneratorOptions'
 import ProjectConfiguration from './system/ProjectConfiguration'
 import SystemConfiguration from './system/SystemConfiguration'
 
-export {}
+export { }
 declare global {
   interface Window {
     electronAPI: {

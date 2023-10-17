@@ -14,18 +14,16 @@ import {
 } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import { useGenerator } from '../contexts/GeneratorContext'
+import { useProject } from '../contexts/ProjectContext'
 import generators from '../generators'
+import OpenApiSchema from '../openApi/OpenApiSchema'
 import ProjectConfiguration from '../system/ProjectConfiguration'
 import SystemConfiguration from '../system/SystemConfiguration'
-import { useProject } from '../contexts/ProjectContext'
-import OpenApiSchema from '../openApi/OpenApiSchema'
-import { useGeneratorOptions } from '../contexts/GeneratorOptionsContext'
 
 function Project() {
   const [systemConfig, setSystemConfig] = useState<SystemConfiguration>()
   const [generator, setGenerator] = useGenerator()
   const [project, setProject] = useProject()
-  const [options] = useGeneratorOptions()
 
   async function handleProjectNameChange(e: React.ChangeEvent<HTMLInputElement>) {
     setProject((x) => ({ ...x, name: e.target.value }))
@@ -44,6 +42,10 @@ function Project() {
       const config = await window.electronAPI.getSystemConfiguration()
       if (config.lastProject) {
         const project = await window.electronAPI.getProject(config.lastProject)
+        if (project.spec) {
+          //TODO fix this - data stored in files should be simple - not containing any functions etc
+          project.schema = new OpenApiSchema(project.spec)
+        }
         setProject(project)
       }
       setSystemConfig(config)
@@ -61,6 +63,10 @@ function Project() {
   async function handleProjectChange(e: SelectChangeEvent) {
     const projectRef = systemConfig.projects.find((x) => x.id === e.target.value)
     const project = await window.electronAPI.getProject(projectRef.id)
+    if (project.spec) {
+      //TODO fix this - data stored in files should be simple - not containing any functions etc
+      project.schema = new OpenApiSchema(project.spec)
+    }
     setProject(project)
     setSystemConfig((x) => ({ ...x, lastProject: project.id }))
   }
@@ -71,7 +77,10 @@ function Project() {
   }
 
   async function handleGenerate() {
-    const files = generator.generate(options)
+    const files = generator.generate(project.schema.paths)
+
+    const promises = files.map((x) => window.electronAPI.writeFile(`${project.projectDirectory}/${x.name}`, x.content))
+    await Promise.all(promises)
   }
 
   async function handleCreateProject() {
@@ -84,7 +93,7 @@ function Project() {
     const file = await window.electronAPI.selectFile()
     const content = await window.electronAPI.readFile(file)
     const spec = JSON.parse(content)
-    setProject((x) => ({ ...x, openapiSpecPath: file, schema: new OpenApiSchema(spec) }))
+    setProject((x) => ({ ...x, openapiSpecPath: file, spec, schema: new OpenApiSchema(spec) }))
   }
 
   async function handleSave() {

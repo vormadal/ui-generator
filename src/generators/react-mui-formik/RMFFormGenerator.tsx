@@ -3,7 +3,6 @@ import { FieldGenerator } from '../../configuration/FieldGenerator'
 import { FieldOptions } from '../../configuration/FieldOptions'
 import { FormOptions } from '../../configuration/FormOptions'
 import GeneratorContent from '../../configuration/GeneratorContent'
-import { GeneratorOptions } from '../../configuration/GeneratorOptions'
 import { groupBy } from '../../utils/arrayExtensions'
 import DefaultFieldGenerator from '../default/DefaultFieldGenerator'
 
@@ -23,11 +22,11 @@ export default class RMFFormGenerator {
     return this._fieldGenerators.find((x) => x.name === options.type) || new DefaultFieldGenerator()
   }
 
-  generate(options: GeneratorOptions): GeneratorContent[] {
-    const { name, entityTypeName, entityName, entityPropertyName, hasInitialValues } = options.formOptions
+  generate(options: FormOptions): GeneratorContent[] {
+    const { name, entityTypeName, entityPropertyName, hasInitialValues } = options ?? {}
 
     const combinedImports = [
-      ...this.getImports(options.formOptions),
+      ...this.getImports(options),
       ...([] as ComponentImport[]).concat(
         ...options.fieldOptions.map((fieldOption) => this.getFieldGenerator(fieldOption).imports)
       )
@@ -42,6 +41,8 @@ export default class RMFFormGenerator {
 
     const imports = mergedImports.map((x) => x.toString()).join('\n')
 
+    const fieldIndents = 5
+    const fields = [...new Set(...options.fieldOptions.map((x) => this.getFieldGenerator(x).generate(x, fieldIndents)))]
     const content = `
 ${imports}
 
@@ -54,12 +55,12 @@ export function ${name}({ onSubmit${hasInitialValues ? `, ${entityPropertyName}`
   
   return (
     <Formik
-      ${hasInitialValues ? `initialValues={${entityPropertyName}}` : ''}
+      initialValues={${hasInitialValues ? entityPropertyName : `new ${entityTypeName}()`}}
       onSubmit={onSubmit}
     >
       {({ values, handleChange, handleBlur }) => (
         <Form>
-          ${options.fieldOptions.map((x) => this.getFieldGenerator(x).generate(x))}
+${fields.map((x) => x.content)}
           <Button type="submit">${hasInitialValues ? 'Save' : 'Create'}</Button>
         </Form>
       )}
@@ -70,6 +71,6 @@ export function ${name}({ onSubmit${hasInitialValues ? `, ${entityPropertyName}`
 export default ${name}
     `
 
-    return [new GeneratorContent('file', content, `components/${name}.tsx`)]
+    return [new GeneratorContent('file', content, `src/components/${name}.tsx`)]
   }
 }

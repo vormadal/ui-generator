@@ -1,5 +1,5 @@
-import { readFile, writeFile } from 'fs'
-
+import { mkdirSync, readFile, writeFile } from 'fs'
+import { dirname } from 'path'
 export async function readFilePromise(path: string): Promise<string> {
   return await new Promise((resolve, error) => {
     readFile(path, 'utf-8', (err, data) => {
@@ -14,6 +14,7 @@ export async function readFilePromise(path: string): Promise<string> {
 
 export async function writeFilePromise(path: string, content: string): Promise<void> {
   return await new Promise((resolve, error) => {
+    mkdirSync(dirname(path), { recursive: true })
     writeFile(path, content, { encoding: 'utf-8' }, (err) => {
       if (err) {
         error(err)
