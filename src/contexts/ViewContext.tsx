@@ -2,12 +2,12 @@ import { createContext, useContext } from 'react'
 import { FieldOptions } from '../configuration/FieldOptions'
 import { View } from '../configuration/FormOptions'
 
-interface GeneratorUpdater {
+interface ViewUpdater {
   updateForm(options: View): void | Promise<void>
   updateField(options: FieldOptions): void | Promise<void>
 }
 
-export const GeneratorOptionsContext = createContext<[View | undefined, GeneratorUpdater]>([
+export const ViewContext = createContext<[View | undefined, ViewUpdater]>([
   undefined,
   {
     updateField: () => {
@@ -19,6 +19,6 @@ export const GeneratorOptionsContext = createContext<[View | undefined, Generato
   }
 ])
 
-export function useGeneratorOptions() {
-  return useContext(GeneratorOptionsContext)
+export function useView() {
+  return useContext(ViewContext)
 }

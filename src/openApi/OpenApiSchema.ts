@@ -24,7 +24,7 @@ function getFormOptions(
       const properties = getOperationProperties(components, source, path, method, generator)
       const resolveReference = <T>(ref: OpenAPIV3.ReferenceObject | T) => resolveReferenceObject<T>(components, ref)
       if (generator.supportsView(method)) {
-        const form = new View(path, method, source, properties, resolveReference)
+        const form = new View(path, method, source, properties, resolveReference, generator)
         //TODO this is a temporary ugly fix
         if (form.entityTypeName !== 'Unknown') endpoints.push(form)
       }

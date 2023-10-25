@@ -3,15 +3,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { FieldOptions } from '../configuration/FieldOptions'
 import { View } from '../configuration/FormOptions'
 import { useGenerator } from '../contexts/GeneratorContext'
-import { GeneratorOptionsContext } from '../contexts/GeneratorOptionsContext'
+import { ViewContext } from '../contexts/ViewContext'
+import TextSetting from './settings/TextSetting'
 
 interface Props {
   active: number
   tab: number
-  config: View
+  view: View
 }
 
-function FormConfigTab({ active, tab, config }: Props) {
+function FormConfigTab({ active, tab, view }: Props) {
   const [generator] = useGenerator()
   const [preview, setPreview] = useState('')
 
@@ -20,10 +21,10 @@ function FormConfigTab({ active, tab, config }: Props) {
   }
 
   useEffect(() => {
-    if (!config || !generator) return
+    if (!view || !generator) return
     setPreview(
       generator
-        .generate([config])
+        .generate([view])
         .map(
           (x) => `// ${x.name}
     ${x.content}
@@ -32,7 +33,7 @@ function FormConfigTab({ active, tab, config }: Props) {
         )
         .join('')
     )
-  }, [generator, config])
+  }, [generator, view])
 
   const updateForm = useCallback((options: View) => {
     // setOptions((previous) => ({
@@ -60,28 +61,23 @@ function FormConfigTab({ active, tab, config }: Props) {
     }),
     [updateForm, updateField]
   )
-  if (active !== tab || !config || !generator?.renderer) return null
+  if (active !== tab || !view) return null
 
   return (
-    <GeneratorOptionsContext.Provider value={[config, updater]}>
+    <ViewContext.Provider value={[view, updater]}>
       <Grid container>
         <Grid
           item
           xs={12}
         >
-          <generator.renderer.FormRenderer
-            options={config}
-            onChange={updater.updateForm}
-          />
-
-          <Typography variant="h5">Property options</Typography>
-          {config.fields.map((options, i) => (
-            <generator.renderer.FieldRenderer
-              key={options.id || i}
-              options={options}
-              onChange={updater.updateField}
+          {view.options?.map((x) => (
+            <TextSetting
+              key={x.name}
+              option={x}
             />
           ))}
+          <Typography variant="h5">Fields</Typography>
+          <Typography variant="body1">TODO</Typography>
 
           <TextareaAutosize
             minRows={20}
@@ -97,7 +93,7 @@ function FormConfigTab({ active, tab, config }: Props) {
           </Button>
         </Grid>
       </Grid>
-    </GeneratorOptionsContext.Provider>
+    </ViewContext.Provider>
   )
 }
 

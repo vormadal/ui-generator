@@ -53,7 +53,7 @@ function App() {
             key={x.path + x.method}
             active={viewTab}
             tab={i}
-            config={x}
+            view={x}
           />
         ))}
       </Grid>

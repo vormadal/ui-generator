@@ -1,6 +1,8 @@
 import { OpenAPIV3 } from 'openapi-types'
 import { FirstLowerCase, FirstUppercase, stripPathParams } from '../utils/stringHelpers'
 import { FieldOptions as Field } from './FieldOptions'
+import { Option } from './Option'
+import { CodeGenerator } from './CodeGenerator'
 
 function getEntityName(path: string): string {
   const name = path?.slice(path?.lastIndexOf('/') + 1) ?? 'Unknown'
@@ -24,7 +26,6 @@ function getEntityTypeName(path: string): string {
 export class View {
   id: string
   name: string
-
   entityTypeName: string
   entityName: string
   /**
@@ -49,12 +50,19 @@ export class View {
 
   public readonly parameters: OpenAPIV3.ParameterObject[]
 
+  /**
+   * these are the options the user can change.
+   * Furthermore the generator can add additional options
+   */
+  public readonly options: Option[] = []
+
   constructor(
     public readonly path: string,
     public readonly method: OpenAPIV3.HttpMethods,
     public readonly source: OpenAPIV3.OperationObject,
     public readonly fields: Field[],
-    resolveReference: <T>(ref: OpenAPIV3.ReferenceObject | T) => T | null
+    resolveReference: <T>(ref: OpenAPIV3.ReferenceObject | T) => T | null,
+    generator: CodeGenerator
   ) {
     this.group = stripPathParams(path)
     this.parameters = source.parameters?.map((x) => resolveReference<OpenAPIV3.ParameterObject>(x)) ?? []
@@ -77,41 +85,12 @@ export class View {
 
     this.entityTypeName = getEntityTypeName(ref)
     this.entityName = getEntityName(ref)
-
-    this.name = resolveViewName(method, this.entityName, content)
-
     this.id = `${method}:${path}`
-  }
-}
 
-function resolveViewName(method: OpenAPIV3.HttpMethods, entityName: string, content: OpenAPIV3.SchemaObject) {
-  let prefix = ''
-  let suffix = ''
-  let name = FirstUppercase(entityName)
-  if (name.endsWith('Dto')) {
-    name = name.substring(0, name.length - 3)
+    this.options = generator.getViewOptions(method, this.entityName, content) || []
   }
 
-  switch (method) {
-    case OpenAPIV3.HttpMethods.GET:
-      prefix = content.type == 'array' ? 'List' : 'Detail'
-      suffix = 'View'
-      break
-    case OpenAPIV3.HttpMethods.POST:
-      prefix = 'Create'
-      suffix = 'Form'
-      break
-    case OpenAPIV3.HttpMethods.PUT:
-      prefix = 'Update'
-      suffix = 'Form'
-      break
-    default:
-      prefix = method.toLowerCase()
-      suffix = 'View'
-      break
+  getOption = <T = string>(name: string): T => {
+    return this.options.find((x) => x.name === name).value
   }
-  if (name.startsWith(prefix)) prefix = ''
-  if (name.endsWith(suffix)) suffix = ''
-
-  return `${prefix}${name}${suffix}`
 }

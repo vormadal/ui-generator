@@ -22,13 +22,14 @@ export default class RMFFormGenerator {
     return this._fieldGenerators.find((x) => x.name === options.type) || new DefaultFieldGenerator()
   }
 
-  generate(options: View): GeneratorContent[] {
-    const { name, entityTypeName, entityPropertyName, hasInitialValues } = options ?? {}
+  generate(view: View): GeneratorContent[] {
+    const { entityTypeName, entityPropertyName, hasInitialValues } = view ?? {}
+    const name = view.getOption('name')
 
     const combinedImports = [
-      ...this.getImports(options),
+      ...this.getImports(view),
       ...([] as ComponentImport[]).concat(
-        ...options.fields.map((fieldOption) => this.getFieldGenerator(fieldOption).imports)
+        ...view.fields.map((fieldOption) => this.getFieldGenerator(fieldOption).imports)
       )
     ]
 
@@ -44,7 +45,7 @@ export default class RMFFormGenerator {
     const fieldIndents = 5
 
     const fields = ([] as GeneratorContent[]).concat(
-      ...options.fields.map((x) => this.getFieldGenerator(x).generate(x, fieldIndents))
+      ...view.fields.map((x) => this.getFieldGenerator(x).generate(x, fieldIndents))
     )
     const content = `
 ${imports}
