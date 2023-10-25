@@ -1,13 +1,13 @@
 import { createContext, useContext } from 'react'
 import { FieldOptions } from '../configuration/FieldOptions'
-import { FormOptions } from '../configuration/FormOptions'
+import { View } from '../configuration/FormOptions'
 
 interface GeneratorUpdater {
-  updateForm(options: FormOptions): void | Promise<void>
+  updateForm(options: View): void | Promise<void>
   updateField(options: FieldOptions): void | Promise<void>
 }
 
-export const GeneratorOptionsContext = createContext<[FormOptions | undefined, GeneratorUpdater]>([
+export const GeneratorOptionsContext = createContext<[View | undefined, GeneratorUpdater]>([
   undefined,
   {
     updateField: () => {

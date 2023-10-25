@@ -1,6 +1,6 @@
 import { OpenAPIV3 } from 'openapi-types'
 import { FirstLowerCase, FirstUppercase, stripPathParams } from '../utils/stringHelpers'
-import { FieldOptions } from './FieldOptions'
+import { FieldOptions as Field } from './FieldOptions'
 
 function getEntityName(path: string): string {
   const name = path?.slice(path?.lastIndexOf('/') + 1) ?? 'Unknown'
@@ -21,7 +21,7 @@ function getEntityTypeName(path: string): string {
  * 3: a list view or
  * 4: detailed view of a single record
  */
-export class FormOptions {
+export class View {
   id: string
   name: string
 
@@ -53,7 +53,7 @@ export class FormOptions {
     public readonly path: string,
     public readonly method: OpenAPIV3.HttpMethods,
     public readonly source: OpenAPIV3.OperationObject,
-    public readonly fieldOptions: FieldOptions[],
+    public readonly fields: Field[],
     resolveReference: <T>(ref: OpenAPIV3.ReferenceObject | T) => T | null
   ) {
     this.group = stripPathParams(path)

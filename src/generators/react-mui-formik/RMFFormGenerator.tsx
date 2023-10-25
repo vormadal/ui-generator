@@ -1,7 +1,7 @@
 import { ComponentImport } from '../../configuration/ComponentImport'
 import { FieldGenerator } from '../../configuration/FieldGenerator'
 import { FieldOptions } from '../../configuration/FieldOptions'
-import { FormOptions } from '../../configuration/FormOptions'
+import { View } from '../../configuration/FormOptions'
 import GeneratorContent from '../../configuration/GeneratorContent'
 import { groupBy } from '../../utils/arrayExtensions'
 import DefaultFieldGenerator from '../default/DefaultFieldGenerator'
@@ -9,7 +9,7 @@ import DefaultFieldGenerator from '../default/DefaultFieldGenerator'
 export default class RMFFormGenerator {
   constructor(private readonly _fieldGenerators: FieldGenerator[]) {}
 
-  getImports(options: FormOptions): ComponentImport[] {
+  getImports(options: View): ComponentImport[] {
     const values = [
       new ComponentImport('formik', ['Formik', 'Form']),
       new ComponentImport('@mui/material', ['Button']),
@@ -19,17 +19,16 @@ export default class RMFFormGenerator {
   }
 
   getFieldGenerator(options: FieldOptions): FieldGenerator {
-    console.log('get type', options.type)
     return this._fieldGenerators.find((x) => x.name === options.type) || new DefaultFieldGenerator()
   }
 
-  generate(options: FormOptions): GeneratorContent[] {
+  generate(options: View): GeneratorContent[] {
     const { name, entityTypeName, entityPropertyName, hasInitialValues } = options ?? {}
 
     const combinedImports = [
       ...this.getImports(options),
       ...([] as ComponentImport[]).concat(
-        ...options.fieldOptions.map((fieldOption) => this.getFieldGenerator(fieldOption).imports)
+        ...options.fields.map((fieldOption) => this.getFieldGenerator(fieldOption).imports)
       )
     ]
 
@@ -45,7 +44,7 @@ export default class RMFFormGenerator {
     const fieldIndents = 5
 
     const fields = ([] as GeneratorContent[]).concat(
-      ...options.fieldOptions.map((x) => this.getFieldGenerator(x).generate(x, fieldIndents))
+      ...options.fields.map((x) => this.getFieldGenerator(x).generate(x, fieldIndents))
     )
     const content = `
 ${imports}

@@ -25,7 +25,7 @@ class SystemConfigurationActions {
   }
 
   handleSave = (e: Electron.IpcMainInvokeEvent, config: SystemConfiguration) => {
-    console.log('saving system config', config)
+    
     if (!config) return
 
     const location = this.getPath()

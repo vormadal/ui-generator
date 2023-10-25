@@ -1,14 +1,14 @@
 import { Button, Grid, TextareaAutosize, Typography } from '@mui/material'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { FieldOptions } from '../configuration/FieldOptions'
-import { FormOptions } from '../configuration/FormOptions'
+import { View } from '../configuration/FormOptions'
 import { useGenerator } from '../contexts/GeneratorContext'
 import { GeneratorOptionsContext } from '../contexts/GeneratorOptionsContext'
 
 interface Props {
   active: number
   tab: number
-  config: FormOptions
+  config: View
 }
 
 function FormConfigTab({ active, tab, config }: Props) {
@@ -34,7 +34,7 @@ function FormConfigTab({ active, tab, config }: Props) {
     )
   }, [generator, config])
 
-  const updateForm = useCallback((options: FormOptions) => {
+  const updateForm = useCallback((options: View) => {
     // setOptions((previous) => ({
     //   ...previous,
     //   formOptions: options
@@ -75,7 +75,7 @@ function FormConfigTab({ active, tab, config }: Props) {
           />
 
           <Typography variant="h5">Property options</Typography>
-          {config.fieldOptions.map((options, i) => (
+          {config.fields.map((options, i) => (
             <generator.renderer.FieldRenderer
               key={options.id || i}
               options={options}

@@ -1,6 +1,6 @@
 import { OpenAPIV2, OpenAPIV3 } from 'openapi-types'
 import { FieldOptions } from '../configuration/FieldOptions'
-import { FormOptions } from '../configuration/FormOptions'
+import { View } from '../configuration/FormOptions'
 import test from './test.json'
 import { CodeGenerator } from '../configuration/CodeGenerator'
 
@@ -11,11 +11,11 @@ function getFormOptions(
   schema: OpenAPIV3.Document,
   components: SchemaComponentMap,
   generator: CodeGenerator
-): FormOptions[] {
+): View[] {
   if (!schema?.paths) return
 
   const paths = Object.keys(schema.paths)
-  const endpoints: FormOptions[] = []
+  const endpoints: View[] = []
   for (const path of paths) {
     const methods = Object.keys(schema.paths[path] || {}) as OpenAPIV3.HttpMethods[]
 
@@ -24,7 +24,7 @@ function getFormOptions(
       const properties = getOperationProperties(components, source, path, method, generator)
       const resolveReference = <T>(ref: OpenAPIV3.ReferenceObject | T) => resolveReferenceObject<T>(components, ref)
       if (generator.supportsView(method)) {
-        const form = new FormOptions(path, method, source, properties, resolveReference)
+        const form = new View(path, method, source, properties, resolveReference)
         //TODO this is a temporary ugly fix
         if (form.entityTypeName !== 'Unknown') endpoints.push(form)
       }
@@ -104,7 +104,7 @@ export default class OpenApiSchema {
   private _formMethods = [OpenAPIV3.HttpMethods.PUT, OpenAPIV3.HttpMethods.POST]
   
   private _data?: OpenAPIV3.Document = test as OpenAPIV3.Document
-  private _paths: FormOptions[] = []
+  private _paths: View[] = []
   private _components: Map<string, OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject | OpenAPIV3.RequestBodyObject> =
     new Map()
 
@@ -120,7 +120,7 @@ export default class OpenApiSchema {
     }
   }
 
-  get paths(): FormOptions[] {
+  get paths(): View[] {
     return this._paths
   }
 
@@ -132,12 +132,12 @@ export default class OpenApiSchema {
     return [...new Set(this.paths.filter((x) => this.isValidForm(x)).map((x) => x.group))]
   }
 
-  public getGroupItems(group: string): FormOptions[] {
+  public getGroupItems(group: string): View[] {
     if (!group) return []
     return this.paths.filter((x) => x.group === group && this.isValidForm(x))
   }
 
-  isValidForm(form?: FormOptions) {
+  isValidForm(form?: View) {
     if (!form?.method || !this._formMethods.includes(form?.method)) return false
 
     if (!form.source?.requestBody) return false

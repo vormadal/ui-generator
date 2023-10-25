@@ -1,12 +1,12 @@
 import { Collapse, Grid, TextField, Typography } from '@mui/material'
-import { FormOptions } from '../../configuration/FormOptions'
+import { View } from '../../configuration/FormOptions'
 import { ExpandMore } from '../ExpandMore'
 import { useState } from 'react'
 import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material'
 
 interface Props {
-  options: FormOptions
-  onChange: (options: FormOptions) => void | Promise<void>
+  options: View
+  onChange: (options: View) => void | Promise<void>
 }
 
 function DefaultFormConfiguration({ options }: Props) {
