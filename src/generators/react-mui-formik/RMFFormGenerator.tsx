@@ -1,7 +1,7 @@
 import { ComponentImport } from '../../configuration/ComponentImport'
 import { FieldGenerator } from '../../configuration/FieldGenerator'
 import { FieldOptions } from '../../configuration/FieldOptions'
-import { View } from '../../configuration/FormOptions'
+import { View } from '../../configuration/View'
 import GeneratorContent from '../../configuration/GeneratorContent'
 import { groupBy } from '../../utils/arrayExtensions'
 import DefaultFieldGenerator from '../default/DefaultFieldGenerator'
@@ -19,7 +19,7 @@ export default class RMFFormGenerator {
   }
 
   getFieldGenerator(options: FieldOptions): FieldGenerator {
-    return this._fieldGenerators.find((x) => x.isSupporting(options.source)) || new DefaultFieldGenerator()
+    return this._fieldGenerators.find((x) => x.isSupporting(options.endpoint.source)) || new DefaultFieldGenerator()
   }
 
   generate(view: View): GeneratorContent[] {

@@ -1,5 +1,6 @@
 import { OpenAPIV3 } from 'openapi-types'
 import { FirstUppercase } from '../utils/stringHelpers'
+import Endpoint from '../openApi/Endpoint'
 
 export class FieldOptions {
   label: string
@@ -7,18 +8,17 @@ export class FieldOptions {
   isRequired: boolean
 
   get id() {
-    return `${this.method}-${this.path}-${this.name}`
+    return `${this.endpoint.method}-${this.endpoint.path}-${this.name}`
   }
 
   constructor(
-    public path: string,
-    public method: OpenAPIV3.HttpMethods,
+    public endpoint: Endpoint,
     public name: string,
-    public source: OpenAPIV3.SchemaObject,
+    public schema: OpenAPIV3.SchemaObject,
     public type: OpenAPIV3.ArraySchemaObjectType | OpenAPIV3.NonArraySchemaObjectType | 'unknown'
   ) {
     this.label = FirstUppercase(name)
     this.ignore = ['_id', 'id'].includes(name)
-    this.isRequired = (source.required || []).includes(name)
+    this.isRequired = (schema.required || []).includes(name)
   }
 }

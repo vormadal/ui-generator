@@ -3,6 +3,8 @@ import { FirstLowerCase, FirstUppercase, stripPathParams } from '../utils/string
 import { FieldOptions as Field } from './FieldOptions'
 import { Option } from './Option'
 import { CodeGenerator } from './CodeGenerator'
+import Endpoint from '../openApi/Endpoint'
+import { SchemaResolver } from '../openApi/OpenApiTypes'
 
 function getEntityName(path: string): string {
   const name = path?.slice(path?.lastIndexOf('/') + 1) ?? 'Unknown'
@@ -54,43 +56,41 @@ export class View {
   public options: Option[] = []
 
   constructor(
-    public path: string,
-    public method: OpenAPIV3.HttpMethods,
-    public source: OpenAPIV3.OperationObject,
+    public endpoint: Endpoint,
     public fields: Field[],
-    resolveReference: <T>(ref: OpenAPIV3.ReferenceObject | T) => T | null,
+    resolveReference: SchemaResolver,
     generator: CodeGenerator
   ) {
-    this.group = stripPathParams(path)
-    this.parameters = source.parameters?.map((x) => resolveReference<OpenAPIV3.ParameterObject>(x)) ?? []
+    this.group = stripPathParams(endpoint.path)
+    this.parameters = endpoint.source.parameters?.map((x) => resolveReference<OpenAPIV3.ParameterObject>(x)) ?? []
 
-    const response = resolveReference<OpenAPIV3.ResponseObject>(source.responses && source.responses[200])
+    const response = resolveReference<OpenAPIV3.ResponseObject>(endpoint.source.responses && endpoint.source.responses[200])
     const responseRef = response?.content && response.content['application/json']
-    const responseContent = resolveReference<OpenAPIV3.SchemaObject>(responseRef)
+    const responseSchema = resolveReference<OpenAPIV3.SchemaObject>(responseRef)
 
-    const request = resolveReference<OpenAPIV3.RequestBodyObject>(source.requestBody)
+    const request = resolveReference<OpenAPIV3.RequestBodyObject>(endpoint.source.requestBody)
     const requestRef = request?.content && request.content['application/json']
-    const requestContent = resolveReference<OpenAPIV3.SchemaObject>(requestRef)
+    const requestSchema = resolveReference<OpenAPIV3.SchemaObject>(requestRef)
 
     let ref = (responseRef?.schema as OpenAPIV3.ReferenceObject)?.$ref
-    let content = responseContent
+    let schema = responseSchema
 
-    if ([OpenAPIV3.HttpMethods.POST, OpenAPIV3.HttpMethods.PUT].includes(method)) {
+    if ([OpenAPIV3.HttpMethods.POST, OpenAPIV3.HttpMethods.PUT].includes(endpoint.method)) {
       ref = (requestRef?.schema as OpenAPIV3.ReferenceObject)?.$ref
-      content = requestContent
+      schema = requestSchema
     }
 
     this.entityTypeName = getEntityTypeName(ref)
     this.entityName = getEntityName(ref)
-    this.id = `${method}:${path}`
+    this.id = `${endpoint.method}:${endpoint.path}`
 
-    this.options = generator.getViewOptions(path, method, this.entityName, content) || []
+    this.options = generator.getViewOptions(endpoint, this.entityName, schema) || []
 
     this.entityPropertyName = FirstLowerCase(this.entityName.replace('Dto', ''))
-    this.isCreateForm = this.method === OpenAPIV3.HttpMethods.POST
-    this.isUpdateForm = this.method === OpenAPIV3.HttpMethods.PUT
-    this.isDetailsView = this.method === OpenAPIV3.HttpMethods.GET //TODO
-    this.isListView = this.method === OpenAPIV3.HttpMethods.GET //TODO
+    this.isCreateForm = this.endpoint.method === OpenAPIV3.HttpMethods.POST
+    this.isUpdateForm = this.endpoint.method === OpenAPIV3.HttpMethods.PUT
+    this.isDetailsView = this.endpoint.method === OpenAPIV3.HttpMethods.GET //TODO
+    this.isListView = this.endpoint.method === OpenAPIV3.HttpMethods.GET //TODO
     this.hasInitialValues = !this.isCreateForm
   }
 

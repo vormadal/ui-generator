@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react'
 import { FieldOptions } from '../configuration/FieldOptions'
-import { View } from '../configuration/FormOptions'
+import { View } from '../configuration/View'
 
 interface ViewUpdater {
   updateForm(options: View): void | Promise<void>

@@ -24,7 +24,7 @@ export default class RMFDateFieldGenerator implements FieldGenerator {
     const content = [
       `${prefix}<DatePicker`,
       `    label="${label}"`,
-      `    value={values.${name}}`,
+      `    value={values.${name} || null}`,
       `    onChange={value => setFieldValue('${name}', value)}`,
       `    slotProps={{`,
       `       textField: {`,

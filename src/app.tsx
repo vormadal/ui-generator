@@ -34,7 +34,7 @@ function App() {
           value={viewTab}
           onChange={(e, v) => setViewTab(v)}
         >
-          {project?.schema?.paths?.map((x) => (
+          {project?.schema?.views?.map((x) => (
             <Tab
               key={x.id}
               // onClick={() => setActiveGroup(x)}
@@ -48,7 +48,7 @@ function App() {
         item
         xs={6}
       >
-        {project?.schema?.paths?.map((x, i) => (
+        {project?.schema?.views?.map((x, i) => (
           <FormConfigTab
             key={x.path + x.method}
             active={viewTab}

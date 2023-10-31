@@ -1,4 +1,4 @@
-import { View } from '../../configuration/FormOptions'
+import { View } from '../../configuration/View'
 import GeneratorContent from '../../configuration/GeneratorContent'
 
 export default class RouteGenerator {

@@ -6,7 +6,7 @@ import GeneratorContent from '../../configuration/GeneratorContent'
 
 export default class RMFTextFieldGenerator implements FieldGenerator {
   isSupporting(schema: OpenAPIV3.SchemaObject): boolean {
-    return schema.type === 'string' && !schema.format
+    return schema?.type === 'string' && !schema?.format
   }
   
   get name() {

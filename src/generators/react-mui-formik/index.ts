@@ -1,6 +1,6 @@
 import { OpenAPIV3 } from 'openapi-types'
 import { CodeGenerator } from '../../configuration/CodeGenerator'
-import { View } from '../../configuration/FormOptions'
+import { View } from '../../configuration/View'
 import GeneratorContent from '../../configuration/GeneratorContent'
 import { Option, TextOption } from '../../configuration/Option'
 import { FirstUppercase } from '../../utils/stringHelpers'
@@ -12,6 +12,7 @@ import RMFDateFieldGenerator from './RMFDateFieldGenerator'
 import RouteGenerator from './RouteGenerator'
 import ProjectConfiguration from '../../system/ProjectConfiguration'
 import ApiGenerator from './ApiGenerator'
+import Endpoint from '../../openApi/Endpoint'
 
 //TODO move to a generic place
 function resolveViewName(method: OpenAPIV3.HttpMethods, entityName: string, content: OpenAPIV3.SchemaObject) {
@@ -53,21 +54,17 @@ const fieldGenerators = [
   new RMFTextFieldGenerator()
 ]
 export default class ReactMuiFormikGenerator implements CodeGenerator {
-  getViewOptions(
-    path: string,
-    method: OpenAPIV3.HttpMethods,
-    entityName: string,
-    content: OpenAPIV3.SchemaObject
-  ): Option[] {
-    const name = resolveViewName(method, entityName, content)
+  getViewOptions(endpoint: Endpoint, entityName: string, schema: OpenAPIV3.SchemaObject): Option[] {
+    const name = resolveViewName(endpoint.method, entityName, schema)
 
     return [
       new TextOption('View name', 'name', name),
-      new TextOption('Route', 'route', path.replace(/{/g, ':').replace(/}/g, ''))
+      new TextOption('Route', 'route', endpoint.path.replace(/{/g, ':').replace(/}/g, '')),
+      new TextOption('Create endpoint', 'createEndpointName', '')
     ]
   }
-  supportsView(method: OpenAPIV3.HttpMethods): boolean {
-    return [OpenAPIV3.HttpMethods.POST, OpenAPIV3.HttpMethods.PUT, OpenAPIV3.HttpMethods.GET].includes(method)
+  supportsView(endpoint: Endpoint): boolean {
+    return [OpenAPIV3.HttpMethods.POST, OpenAPIV3.HttpMethods.PUT, OpenAPIV3.HttpMethods.GET].includes(endpoint.method)
   }
 
   supportsField(schema: OpenAPIV3.SchemaObject): boolean {

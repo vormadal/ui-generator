@@ -89,7 +89,7 @@ function Project() {
   }
 
   async function handleGenerate() {
-    const content = generator.generate(project.schema.paths, false, project)
+    const content = generator.generate(project.schema.views, false, project)
     const files = content.filter(x => x.type === 'file')
     const scripts = content.filter(x => x.type === 'script')
 

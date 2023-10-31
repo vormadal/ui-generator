@@ -1,7 +1,7 @@
 import { Button, Grid, TextareaAutosize, Typography } from '@mui/material'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { FieldOptions } from '../configuration/FieldOptions'
-import { View } from '../configuration/FormOptions'
+import { View } from '../configuration/View'
 import { useGenerator } from '../contexts/GeneratorContext'
 import { ViewContext } from '../contexts/ViewContext'
 import TextSetting from './settings/TextSetting'
