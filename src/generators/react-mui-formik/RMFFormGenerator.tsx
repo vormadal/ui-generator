@@ -19,7 +19,7 @@ export default class RMFFormGenerator {
   }
 
   getFieldGenerator(options: FieldOptions): FieldGenerator {
-    return this._fieldGenerators.find((x) => x.name === options.type) || new DefaultFieldGenerator()
+    return this._fieldGenerators.find((x) => x.isSupporting(options.source)) || new DefaultFieldGenerator()
   }
 
   generate(view: View): GeneratorContent[] {
@@ -42,7 +42,7 @@ export default class RMFFormGenerator {
 
     const imports = mergedImports.map((x) => x.toString()).join('\n')
 
-    const fieldIndents = 5
+    const fieldIndents = 3
 
     const fields = ([] as GeneratorContent[]).concat(
       ...view.fields.map((x) => this.getFieldGenerator(x).generate(x, fieldIndents))
@@ -62,7 +62,7 @@ export function ${name}({ onSubmit${hasInitialValues ? `, ${entityPropertyName}`
       initialValues={${hasInitialValues ? entityPropertyName : `new ${entityTypeName}()`}}
       onSubmit={onSubmit}
     >
-      {({ values, handleChange, handleBlur }) => (
+      {({ values, handleChange, setFieldValue }) => (
         <Form>
 ${fields.map((x) => x.content).join('\n')}
           <Button type="submit">${hasInitialValues ? 'Save' : 'Create'}</Button>
@@ -75,6 +75,40 @@ ${fields.map((x) => x.content).join('\n')}
 export default ${name}
     `
 
-    return [new GeneratorContent('file', content, `src/components/${name}.tsx`)]
+    const pageName = name.replace('Form', 'Page')
+    
+    const pageContent = `
+import { Button, Grid, Typography } from '@mui/material'
+import { Loading, useData, useRequest, useToast } from '@vormadal/react-mui'
+import { ${name} } from '../components/${name}'
+import { Api } from '../api'
+${view.isUpdateForm ? `import { useParams } from 'react-router-dom'` : ''}
+
+
+function ${pageName}() {
+  ${view.isUpdateForm ? 'const params = useParams<{ id: string }>()' : ''}
+  ${view.isUpdateForm ? `const ${entityPropertyName} = useData(async (id: string | undefined) => (!id ? undefined : Api.${view.getOperationName}(id)))` : ''}
+  return (
+    <Grid
+      container
+      justifyContent="center"
+    >
+      <Grid
+        item
+        xs={11}
+        md={6}
+      >
+        <Typography variant="h5">${name}</Typography>
+        
+      </Grid>
+    </Grid>
+  )
+}
+
+export default ${pageName}
+    `
+    return [
+      new GeneratorContent('file', content, `src/components/${name}.tsx`),
+      new GeneratorContent('file', pageContent, `src/pages/${pageName}.tsx`)]
   }
 }

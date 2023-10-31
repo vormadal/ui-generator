@@ -25,42 +25,39 @@ function getEntityTypeName(path: string): string {
  */
 export class View {
   id: string
-  name: string
   entityTypeName: string
   entityName: string
   /**
    * Name of the property of type 'entityTypeName' used for e.g. parameter name in submit function.
    * Usually the same as entity name but with the first letter as lowercase
    */
-  get entityPropertyName() {
-    //TODO can we make this smarter?
-    return FirstLowerCase(this.entityName.replace('Dto', ''))
-  }
+  public entityPropertyName: string
 
-  get isCreateForm() {
-    return this.method === OpenAPIV3.HttpMethods.POST
-  }
+  public isCreateForm: boolean
+  public isUpdateForm: boolean
+  public isListView: boolean
+  public isDetailsView: boolean
 
-  get hasInitialValues() {
-    return !this.isCreateForm
-  }
+  public hasInitialValues: boolean
 
-  public readonly group: string
-  public readonly entityImportPath = '../api'
+  public group: string
+  public entityImportPath = '../api'
 
-  public readonly parameters: OpenAPIV3.ParameterObject[]
+  public parameters: OpenAPIV3.ParameterObject[]
+
+  public getOperationName = 'Unknown'
 
   /**
    * these are the options the user can change.
    * Furthermore the generator can add additional options
    */
-  public readonly options: Option[] = []
+  public options: Option[] = []
 
   constructor(
-    public readonly path: string,
-    public readonly method: OpenAPIV3.HttpMethods,
-    public readonly source: OpenAPIV3.OperationObject,
-    public readonly fields: Field[],
+    public path: string,
+    public method: OpenAPIV3.HttpMethods,
+    public source: OpenAPIV3.OperationObject,
+    public fields: Field[],
     resolveReference: <T>(ref: OpenAPIV3.ReferenceObject | T) => T | null,
     generator: CodeGenerator
   ) {
@@ -87,7 +84,14 @@ export class View {
     this.entityName = getEntityName(ref)
     this.id = `${method}:${path}`
 
-    this.options = generator.getViewOptions(method, this.entityName, content) || []
+    this.options = generator.getViewOptions(path, method, this.entityName, content) || []
+
+    this.entityPropertyName = FirstLowerCase(this.entityName.replace('Dto', ''))
+    this.isCreateForm = this.method === OpenAPIV3.HttpMethods.POST
+    this.isUpdateForm = this.method === OpenAPIV3.HttpMethods.PUT
+    this.isDetailsView = this.method === OpenAPIV3.HttpMethods.GET //TODO
+    this.isListView = this.method === OpenAPIV3.HttpMethods.GET //TODO
+    this.hasInitialValues = !this.isCreateForm
   }
 
   getOption = <T = string>(name: string): T => {

@@ -16,5 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectDirectory: async () => ipcRenderer.invoke('dialog:select:directory'),
 
   readFile: async (path: string) => ipcRenderer.invoke('file:read', path),
-  writeFile: async (path: string, content: string) => ipcRenderer.invoke('file:write', path, content)
+  writeFile: async (path: string, content: string) => ipcRenderer.invoke('file:write', path, content),
+
+  runScript: async (directory: string, command: string) => ipcRenderer.invoke('script:run', directory, command)
 })

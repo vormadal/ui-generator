@@ -1,7 +1,6 @@
 import { OpenAPIV2, OpenAPIV3 } from 'openapi-types'
 import { FieldOptions } from '../configuration/FieldOptions'
 import { View } from '../configuration/FormOptions'
-import test from './test.json'
 import { CodeGenerator } from '../configuration/CodeGenerator'
 
 type AnySchema = OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject | OpenAPIV3.RequestBodyObject
@@ -58,7 +57,7 @@ function getOperationProperties(
   for (const propName of Object.keys(content?.properties || {})) {
     const prop = resolveReferenceObject<OpenAPIV3.SchemaObject>(components, content?.properties[propName])
 
-    if (generator.supportsField(prop.type)) {
+    if (generator.supportsField(prop)) {
       //TODO verify if type is correct
       properties.push(new FieldOptions(path, method, propName, prop, prop.type))
     }
@@ -103,7 +102,7 @@ function resolveReferenceObject<T>(components: SchemaComponentMap, obj?: T | Ope
 export default class OpenApiSchema {
   private _formMethods = [OpenAPIV3.HttpMethods.PUT, OpenAPIV3.HttpMethods.POST]
   
-  private _data?: OpenAPIV3.Document = test as OpenAPIV3.Document
+  private _data?: OpenAPIV3.Document
   private _paths: View[] = []
   private _components: Map<string, OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject | OpenAPIV3.RequestBodyObject> =
     new Map()

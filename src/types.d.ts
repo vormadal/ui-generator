@@ -1,7 +1,7 @@
 import ProjectConfiguration from './system/ProjectConfiguration'
 import SystemConfiguration from './system/SystemConfiguration'
 
-export { }
+export {}
 declare global {
   interface Window {
     electronAPI: {
@@ -16,6 +16,8 @@ declare global {
 
       readFile(path: string): Promise<string>
       writeFile(path: string, content: string): Promise<void>
+
+      runScript(directory: string, command: string): Promise<void>
     }
   }
 }

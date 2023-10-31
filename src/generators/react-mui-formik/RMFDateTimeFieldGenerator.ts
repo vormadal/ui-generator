@@ -4,15 +4,17 @@ import { FieldGenerator } from '../../configuration/FieldGenerator'
 import { FieldOptions } from '../../configuration/FieldOptions'
 import GeneratorContent from '../../configuration/GeneratorContent'
 
-export default class RMFBooleanFieldGenerator implements FieldGenerator {
-  isSupporting(schema: OpenAPIV3.SchemaObject): boolean {
-    return schema.type === 'boolean'
-  }
+export default class RMFDateTimeFieldGenerator implements FieldGenerator {
   get name() {
-    return 'boolean'
+    return 'date-time'
   }
   get imports(): ComponentImport[] {
-    return [new ComponentImport('@mui/material', ['FormControlLabel', 'Checkbox'])]
+    return [new ComponentImport('@mui/x-date-pickers', ['DateTimePicker'])]
+  }
+
+  isSupporting(schema: OpenAPIV3.SchemaObject): boolean {
+    console.log('is supporting', schema.format, schema.type)
+    return schema.format === 'date-time'
   }
 
   generate(options: FieldOptions, indents: number): GeneratorContent[] {
@@ -20,13 +22,17 @@ export default class RMFBooleanFieldGenerator implements FieldGenerator {
 
     const prefix = new Array(indents || 0).fill('\t').join('')
     const content = [
-      `${prefix}<FormControlLabel`,
-      `    ${isRequired ? 'required' : ''}`,
-      `    name="${name}"`,
-      `    onChange={handleChange}`,
-      `    value={values.${name}}`,
-      `    control={<Checkbox />}`,
+      `${prefix}<DateTimePicker`,
       `    label="${label}"`,
+      `    ampm={false}`,
+      `    value={values.${name}}`,
+      `    onChange={value => setFieldValue('${name}', value)}`,
+      `    slotProps={{`,
+      `       textField: {`,
+      `         name: '${name}'`,
+      `       }`,
+      `    }}`,
+      `    ${isRequired ? 'required' : ''}`,
       `/>`
     ]
 

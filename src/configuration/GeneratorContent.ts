@@ -1,4 +1,4 @@
-export type GeneratorContentType = 'file' | 'partial'
+export type GeneratorContentType = 'file' | 'partial' | 'script'
 export default class GeneratorContent {
   constructor(
     public readonly type: GeneratorContentType,

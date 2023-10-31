@@ -11,11 +11,11 @@ export class FieldOptions {
   }
 
   constructor(
-    public readonly path: string,
-    public readonly method: OpenAPIV3.HttpMethods,
-    public readonly name: string,
-    public readonly source: OpenAPIV3.SchemaObject,
-    public readonly type: OpenAPIV3.ArraySchemaObjectType | OpenAPIV3.NonArraySchemaObjectType | 'unknown'
+    public path: string,
+    public method: OpenAPIV3.HttpMethods,
+    public name: string,
+    public source: OpenAPIV3.SchemaObject,
+    public type: OpenAPIV3.ArraySchemaObjectType | OpenAPIV3.NonArraySchemaObjectType | 'unknown'
   ) {
     this.label = FirstUppercase(name)
     this.ignore = ['_id', 'id'].includes(name)

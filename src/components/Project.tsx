@@ -19,11 +19,12 @@ import generators from '../generators'
 import OpenApiSchema from '../openApi/OpenApiSchema'
 import ProjectConfiguration from '../system/ProjectConfiguration'
 import SystemConfiguration from '../system/SystemConfiguration'
+import axios from 'axios'
 
-function formatPath(path: string){
+function formatPath(path: string) {
   const delimiter = path.includes('/') ? '/' : '\\'
 
-  const end = path.substring(path.lastIndexOf(delimiter)+1);
+  const end = path.substring(path.lastIndexOf(delimiter) + 1)
   const start = path.substring(0, path.indexOf(delimiter, 5))
 
   return `${start}\\..\\${end}`
@@ -52,7 +53,7 @@ function Project() {
       if (config.lastProject) {
         const project = await window.electronAPI.getProject(config.lastProject)
         if (project.spec && project.selectedGenerator) {
-          const generator = generators.options.find(x => x.name === project.selectedGenerator)
+          const generator = generators.options.find((x) => x.name === project.selectedGenerator)
           //TODO fix this - data stored in files should be simple - not containing any functions etc
           project.schema = new OpenApiSchema(project.spec, generator)
         }
@@ -74,10 +75,10 @@ function Project() {
     const projectRef = systemConfig.projects.find((x) => x.id === e.target.value)
     const project = await window.electronAPI.getProject(projectRef.id)
     if (project.spec && project.selectedGenerator) {
-          const generator = generators.options.find(x => x.name === project.selectedGenerator)
-          //TODO fix this - data stored in files should be simple - not containing any functions etc
-          project.schema = new OpenApiSchema(project.spec, generator)
-        }
+      const generator = generators.options.find((x) => x.name === project.selectedGenerator)
+      //TODO fix this - data stored in files should be simple - not containing any functions etc
+      project.schema = new OpenApiSchema(project.spec, generator)
+    }
     setProject(project)
     setSystemConfig((x) => ({ ...x, lastProject: project.id }))
   }
@@ -88,8 +89,14 @@ function Project() {
   }
 
   async function handleGenerate() {
-    const files = generator.generate(project.schema.paths)
+    const content = generator.generate(project.schema.paths, false, project)
+    const files = content.filter(x => x.type === 'file')
+    const scripts = content.filter(x => x.type === 'script')
 
+    for(const script of scripts){
+      console.log('running script', script.name)
+      await window.electronAPI.runScript(project.projectDirectory, script.content)
+    }    
     const promises = files.map((x) => window.electronAPI.writeFile(`${project.projectDirectory}/${x.name}`, x.content))
     await Promise.all(promises)
   }
@@ -107,9 +114,33 @@ function Project() {
     setProject((x) => ({ ...x, openapiSpecPath: file, spec, schema: new OpenApiSchema(spec, generator) }))
   }
 
+  async function handleOpenApiSpecChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const path = e.target.value
+    if (!path || !path.startsWith('http')) {
+      return
+    }
+    try {
+      const result = await axios.get(e.target.value, {
+        
+      })
+      console.log('result', result.data)
+    } catch (e) {
+      console.log('axios error', e)
+      return
+    }
+    setProject((x) => ({
+      ...x,
+      openapiSpecPath: e.target.value
+    }))
+  }
+
   async function handleSave() {
     if (systemConfig) window.electronAPI.saveSystemConfiguration(systemConfig)
-    if (project) window.electronAPI.saveProject(project)
+    
+    if (project){
+      const copy = JSON.parse(JSON.stringify(project))
+      window.electronAPI.saveProject(copy)
+    } 
   }
 
   async function handleGeneratorChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -204,6 +235,7 @@ function Project() {
             <TextField
               fullWidth
               value={formatPath(project?.openapiSpecPath || '')}
+              onChange={handleOpenApiSpecChange}
               label="OpenAPI definition"
               placeholder="File or URL"
               InputProps={{

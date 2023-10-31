@@ -24,7 +24,7 @@ function FormConfigTab({ active, tab, view }: Props) {
     if (!view || !generator) return
     setPreview(
       generator
-        .generate([view])
+        .generate([view], true)
         .map(
           (x) => `// ${x.name}
     ${x.content}
