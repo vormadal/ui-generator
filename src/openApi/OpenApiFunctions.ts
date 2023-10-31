@@ -1,9 +1,9 @@
 import { OpenAPIV3 } from 'openapi-types'
-import { AnySchema, EndpointResolver, SchemaComponentMap, SchemaResolver } from './OpenApiTypes'
-import Endpoint from './Endpoint'
-import { CodeGenerator } from '../configuration/CodeGenerator'
 import { FieldOptions } from '../configuration/FieldOptions'
 import { View } from '../configuration/View'
+import Endpoint from './Endpoint'
+import OpenApiSchema from './OpenApiSchema'
+import { AnySchema, SchemaComponentMap } from './OpenApiTypes'
 
 export function resolveReferenceObject<T>(
   components: SchemaComponentMap,
@@ -21,15 +21,13 @@ export function resolveReferenceObject<T>(
   return obj as T
 }
 
-export function getEndpointFields(
-  endpoint: Endpoint,
-  resolveSchema: SchemaResolver,
-  generator: CodeGenerator
-): FieldOptions[] {
-  const requestBody = resolveSchema<OpenAPIV3.RequestBodyObject>(endpoint.source?.requestBody)
+export function getEndpointFields(endpoint: Endpoint, spec: OpenApiSchema): FieldOptions[] {
+  const requestBody = spec.resolveReference<OpenAPIV3.RequestBodyObject>(endpoint.source?.requestBody)
   if (!requestBody) return []
 
-  const requestBodySchema = resolveSchema<OpenAPIV3.SchemaObject>(requestBody?.content['application/json']?.schema)
+  const requestBodySchema = spec.resolveReference<OpenAPIV3.SchemaObject>(
+    requestBody?.content['application/json']?.schema
+  )
 
   if (requestBodySchema?.type !== 'object' || !requestBodySchema?.properties) {
     //TODO handle array and simple types or is this ever relevant?
@@ -38,9 +36,9 @@ export function getEndpointFields(
 
   const properties: FieldOptions[] = []
   for (const propName of Object.keys(requestBodySchema?.properties || {})) {
-    const propertySchema = resolveSchema<OpenAPIV3.SchemaObject>(requestBodySchema?.properties[propName])
+    const propertySchema = spec.resolveReference<OpenAPIV3.SchemaObject>(requestBodySchema?.properties[propName])
 
-    if (generator.supportsField(propertySchema, endpoint)) {
+    if (spec.generator.supportsField(propertySchema, endpoint)) {
       //TODO verify if type is correct
       properties.push(new FieldOptions(endpoint, propName, propertySchema, propertySchema.type))
     }
@@ -69,13 +67,13 @@ export function getSchemaComponents(spec: OpenAPIV3.Document): SchemaComponentMa
   return map
 }
 
-export function getFormOptions(endpoints: Endpoint[], resolveSchema: SchemaResolver, generator: CodeGenerator): View[] {
+export function getViews(endpoints: Endpoint[], spec: OpenApiSchema): View[] {
   const views: View[] = []
 
   for (const endpoint of endpoints) {
-    const fields = getEndpointFields(endpoint, resolveSchema, generator)
-    if (generator.supportsView(endpoint)) {
-      const view = new View(endpoint, fields, resolveSchema, generator)
+    const fields = getEndpointFields(endpoint, spec)
+    if (spec.generator.supportsView(endpoint)) {
+      const view = new View(endpoint, fields, spec)
       //TODO this is a temporary ugly fix
       if (view.entityTypeName !== 'Unknown') views.push(view)
     }
@@ -99,16 +97,4 @@ export function getEndpoints(schema: OpenAPIV3.Document) {
   }
 
   return endpoints
-}
-
-export function getSchemaResolver(components: SchemaComponentMap): SchemaResolver {
-  return function <T>(ref: OpenAPIV3.ReferenceObject | T) {
-    return resolveReferenceObject<T>(components, ref)
-  }
-}
-
-export function getEndpointResolver(endpoints: Endpoint[]): EndpointResolver {
-  return function (method: OpenAPIV3.HttpMethods, path: string) {
-    return endpoints.find((x) => x.method === method && x.path === path)
-  }
 }

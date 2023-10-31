@@ -3,17 +3,17 @@ import GeneratorContent from '../../configuration/GeneratorContent'
 
 export default class RouteGenerator {
   generate(views: View[]): GeneratorContent {
-    const viewNames = views.map((x) => x.getOption('name'))
+    const viewNames = views.map((x) => x.getOption('pageName'))
     const imports = [
       `import { Route, HashRouter as Router, Routes, useNavigate, useSearchParams } from 'react-router-dom'`,
-      ...viewNames.map((x) => `import { ${x} } from './pages/${x}'`)
+      ...viewNames.map((x) => `import ${x} from './pages/${x}'`)
     ].join('\n')
 
     const routes = views
       .map((x) => [
         `<Route`, 
         `   path="${x.getOption('route')}"`, 
-        `   element={<${x.getOption('name')} />}`, 
+        `   element={<${x.getOption('pageName')} />}`, 
         `/>`
       ].join('\n\t\t\t\t'))
       .join('\n\t\t\t')

@@ -4,6 +4,7 @@ import GeneratorContent from './GeneratorContent'
 import { Option } from './Option'
 import ProjectConfiguration from '../system/ProjectConfiguration'
 import Endpoint from '../openApi/Endpoint'
+import OpenApiSchema from '../openApi/OpenApiSchema'
 
 export interface CodeGenerator {
   /**
@@ -19,6 +20,7 @@ export interface CodeGenerator {
   getViewOptions(
     endpoint: Endpoint,
     entityName: string,
-    schema: OpenAPIV3.SchemaObject // response or request schema depending on operation method
+    schema: OpenAPIV3.SchemaObject, // response or request schema depending on operation method
+    spec: OpenApiSchema
   ): Option[]
 }

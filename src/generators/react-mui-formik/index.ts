@@ -13,39 +13,10 @@ import RouteGenerator from './RouteGenerator'
 import ProjectConfiguration from '../../system/ProjectConfiguration'
 import ApiGenerator from './ApiGenerator'
 import Endpoint from '../../openApi/Endpoint'
+import { resolveViewName } from './utils/ViewUtils'
+import OpenApiSchema from '../../openApi/OpenApiSchema'
 
 //TODO move to a generic place
-function resolveViewName(method: OpenAPIV3.HttpMethods, entityName: string, content: OpenAPIV3.SchemaObject) {
-  let prefix = ''
-  let suffix = ''
-  let name = FirstUppercase(entityName)
-  if (name.endsWith('Dto')) {
-    name = name.substring(0, name.length - 3)
-  }
-
-  switch (method) {
-    case OpenAPIV3.HttpMethods.GET:
-      prefix = content.type == 'array' ? 'List' : 'Detail'
-      suffix = 'View'
-      break
-    case OpenAPIV3.HttpMethods.POST:
-      prefix = 'Create'
-      suffix = 'Form'
-      break
-    case OpenAPIV3.HttpMethods.PUT:
-      prefix = 'Update'
-      suffix = 'Form'
-      break
-    default:
-      prefix = method.toLowerCase()
-      suffix = 'View'
-      break
-  }
-  if (name.startsWith(prefix)) prefix = ''
-  if (name.endsWith(suffix)) suffix = ''
-
-  return `${prefix}${name}${suffix}`
-}
 
 const fieldGenerators = [
   new RMFBooleanFieldGenerator(),
@@ -54,14 +25,40 @@ const fieldGenerators = [
   new RMFTextFieldGenerator()
 ]
 export default class ReactMuiFormikGenerator implements CodeGenerator {
-  getViewOptions(endpoint: Endpoint, entityName: string, schema: OpenAPIV3.SchemaObject): Option[] {
+  getViewOptions(
+    endpoint: Endpoint,
+    entityName: string,
+    schema: OpenAPIV3.SchemaObject,
+    spec: OpenApiSchema
+  ): Option[] {
     const name = resolveViewName(endpoint.method, entityName, schema)
 
-    return [
-      new TextOption('View name', 'name', name),
+    const viewSuffix = [OpenAPIV3.HttpMethods.PUT, OpenAPIV3.HttpMethods.POST].includes(endpoint.method)
+      ? 'Form'
+      : 'View'
+    const options: Option[] = [
+      new TextOption('View name', 'name', `${name}${viewSuffix}`),
       new TextOption('Route', 'route', endpoint.path.replace(/{/g, ':').replace(/}/g, '')),
-      new TextOption('Create endpoint', 'createEndpointName', '')
+      new TextOption('Page name', 'pageName', `${name}Page`)
     ]
+
+    switch (endpoint.method) {
+      case OpenAPIV3.HttpMethods.POST:
+        options.push(new TextOption('Create endpoint', 'createEndpointName', endpoint.operationName))
+        break
+      case OpenAPIV3.HttpMethods.PUT:
+        options.push(
+          new TextOption('Update endpoint', 'updateEndpointName', endpoint.operationName),
+          new TextOption(
+            'Get endpoint',
+            'getEndpointName',
+            spec.resolveEndpoint(OpenAPIV3.HttpMethods.GET, endpoint.path)?.operationName
+          )
+        )
+        break
+    }
+
+    return options
   }
   supportsView(endpoint: Endpoint): boolean {
     return [OpenAPIV3.HttpMethods.POST, OpenAPIV3.HttpMethods.PUT, OpenAPIV3.HttpMethods.GET].includes(endpoint.method)
@@ -85,7 +82,7 @@ export default class ReactMuiFormikGenerator implements CodeGenerator {
 
     const content: GeneratorContent[] = []
     if (!viewOnly) {
-      content.push(...this._apiGenerator.generate(project))
+      // content.push(...this._apiGenerator.generate(project))
       content.push(this._routeGenerator.generate(options))
     }
 

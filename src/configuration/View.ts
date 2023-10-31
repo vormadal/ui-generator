@@ -5,6 +5,7 @@ import { Option } from './Option'
 import { CodeGenerator } from './CodeGenerator'
 import Endpoint from '../openApi/Endpoint'
 import { SchemaResolver } from '../openApi/OpenApiTypes'
+import OpenApiSchema from '../openApi/OpenApiSchema'
 
 function getEntityName(path: string): string {
   const name = path?.slice(path?.lastIndexOf('/') + 1) ?? 'Unknown'
@@ -47,8 +48,6 @@ export class View {
 
   public parameters: OpenAPIV3.ParameterObject[]
 
-  public getOperationName = 'Unknown'
-
   /**
    * these are the options the user can change.
    * Furthermore the generator can add additional options
@@ -58,19 +57,18 @@ export class View {
   constructor(
     public endpoint: Endpoint,
     public fields: Field[],
-    resolveReference: SchemaResolver,
-    generator: CodeGenerator
+    spec: OpenApiSchema
   ) {
     this.group = stripPathParams(endpoint.path)
-    this.parameters = endpoint.source.parameters?.map((x) => resolveReference<OpenAPIV3.ParameterObject>(x)) ?? []
+    this.parameters = endpoint.source.parameters?.map((x) => spec.resolveReference<OpenAPIV3.ParameterObject>(x)) ?? []
 
-    const response = resolveReference<OpenAPIV3.ResponseObject>(endpoint.source.responses && endpoint.source.responses[200])
+    const response = spec.resolveReference<OpenAPIV3.ResponseObject>(endpoint.source.responses && endpoint.source.responses[200])
     const responseRef = response?.content && response.content['application/json']
-    const responseSchema = resolveReference<OpenAPIV3.SchemaObject>(responseRef)
+    const responseSchema = spec.resolveReference<OpenAPIV3.SchemaObject>(responseRef)
 
-    const request = resolveReference<OpenAPIV3.RequestBodyObject>(endpoint.source.requestBody)
+    const request = spec.resolveReference<OpenAPIV3.RequestBodyObject>(endpoint.source.requestBody)
     const requestRef = request?.content && request.content['application/json']
-    const requestSchema = resolveReference<OpenAPIV3.SchemaObject>(requestRef)
+    const requestSchema = spec.resolveReference<OpenAPIV3.SchemaObject>(requestRef)
 
     let ref = (responseRef?.schema as OpenAPIV3.ReferenceObject)?.$ref
     let schema = responseSchema
@@ -84,7 +82,7 @@ export class View {
     this.entityName = getEntityName(ref)
     this.id = `${endpoint.method}:${endpoint.path}`
 
-    this.options = generator.getViewOptions(endpoint, this.entityName, schema) || []
+    this.options = spec.generator.getViewOptions(endpoint, this.entityName, schema, spec) || []
 
     this.entityPropertyName = FirstLowerCase(this.entityName.replace('Dto', ''))
     this.isCreateForm = this.endpoint.method === OpenAPIV3.HttpMethods.POST
@@ -95,6 +93,6 @@ export class View {
   }
 
   getOption = <T = string>(name: string): T => {
-    return this.options.find((x) => x.name === name).value
+    return this.options.find((x) => x.name === name)?.value
   }
 }

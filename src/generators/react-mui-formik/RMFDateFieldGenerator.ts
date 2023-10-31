@@ -13,7 +13,6 @@ export default class RMFDateFieldGenerator implements FieldGenerator {
   }
 
   isSupporting(schema: OpenAPIV3.SchemaObject): boolean {
-    console.log('is supporting', schema.format, schema.type)
     return schema.format === 'date'
   }
 

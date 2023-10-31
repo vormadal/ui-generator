@@ -5,6 +5,11 @@ import { View } from '../../configuration/View'
 import GeneratorContent from '../../configuration/GeneratorContent'
 import { groupBy } from '../../utils/arrayExtensions'
 import DefaultFieldGenerator from '../default/DefaultFieldGenerator'
+import { OpenAPIV3 } from 'openapi-types'
+import { createFormTeplate } from './templates/CreateForm'
+import { updateFormTeplate } from './templates/UpdateForm'
+import { createPageTemplate } from './templates/CreatePage'
+import { updatePageTemplate } from './templates/UpdatePage'
 
 export default class RMFFormGenerator {
   constructor(private readonly _fieldGenerators: FieldGenerator[]) {}
@@ -13,17 +18,16 @@ export default class RMFFormGenerator {
     const values = [
       new ComponentImport('formik', ['Formik', 'Form']),
       new ComponentImport('@mui/material', ['Button']),
-      new ComponentImport(options.entityImportPath, [options.entityTypeName])
+      new ComponentImport('../api/Client', [options.entityTypeName])
     ]
     return values
   }
 
   getFieldGenerator(options: FieldOptions): FieldGenerator {
-    return this._fieldGenerators.find((x) => x.isSupporting(options.endpoint.source)) || new DefaultFieldGenerator()
+    return this._fieldGenerators.find((x) => x.isSupporting(options.schema)) || new DefaultFieldGenerator()
   }
 
   generate(view: View): GeneratorContent[] {
-    const { entityTypeName, entityPropertyName, hasInitialValues } = view ?? {}
     const name = view.getOption('name')
 
     const combinedImports = [
@@ -47,68 +51,24 @@ export default class RMFFormGenerator {
     const fields = ([] as GeneratorContent[]).concat(
       ...view.fields.map((x) => this.getFieldGenerator(x).generate(x, fieldIndents))
     )
-    const content = `
+    const formContent = `
 ${imports}
 
-interface Props {
-  onSubmit: (${entityPropertyName}: ${entityTypeName}) => void | Promise<void>
-  ${hasInitialValues ? `${entityPropertyName}: ${entityTypeName}` : ''}
+${
+  view.endpoint.method === OpenAPIV3.HttpMethods.POST
+    ? createFormTeplate(view, fields)
+    : updateFormTeplate(view, fields)
 }
-
-export function ${name}({ onSubmit${hasInitialValues ? `, ${entityPropertyName}` : ''} }: Props) {
-  
-  return (
-    <Formik
-      initialValues={${hasInitialValues ? entityPropertyName : `new ${entityTypeName}()`}}
-      onSubmit={onSubmit}
-    >
-      {({ values, handleChange, setFieldValue }) => (
-        <Form>
-${fields.map((x) => x.content).join('\n')}
-          <Button type="submit">${hasInitialValues ? 'Save' : 'Create'}</Button>
-        </Form>
-      )}
-    </Formik>
-  )
-}
-
-export default ${name}
     `
 
     const pageName = name.replace('Form', 'Page')
-    
-    const pageContent = `
-import { Button, Grid, Typography } from '@mui/material'
-import { Loading, useData, useRequest, useToast } from '@vormadal/react-mui'
-import { ${name} } from '../components/${name}'
-import { Api } from '../api'
-${view.isUpdateForm ? `import { useParams } from 'react-router-dom'` : ''}
 
+    const pageContent =
+      view.endpoint.method === OpenAPIV3.HttpMethods.POST ? createPageTemplate(view) : updatePageTemplate(view)
 
-function ${pageName}() {
-  ${view.isUpdateForm ? 'const params = useParams<{ id: string }>()' : ''}
-  ${view.isUpdateForm ? `const ${entityPropertyName} = useData(async (id: string | undefined) => (!id ? undefined : Api.${view.getOperationName}(id)))` : ''}
-  return (
-    <Grid
-      container
-      justifyContent="center"
-    >
-      <Grid
-        item
-        xs={11}
-        md={6}
-      >
-        <Typography variant="h5">${name}</Typography>
-        
-      </Grid>
-    </Grid>
-  )
-}
-
-export default ${pageName}
-    `
     return [
-      new GeneratorContent('file', content, `src/components/${name}.tsx`),
-      new GeneratorContent('file', pageContent, `src/pages/${pageName}.tsx`)]
+      new GeneratorContent('file', formContent, `src/components/${name}.tsx`),
+      new GeneratorContent('file', pageContent, `src/pages/${pageName}.tsx`)
+    ]
   }
 }
