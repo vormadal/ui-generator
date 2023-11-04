@@ -61,7 +61,7 @@ ${
 }
     `
 
-    const pageName = name.replace('Form', 'Page')
+    const pageName = view.getOption('pageName')
 
     const pageContent =
       view.endpoint.method === OpenAPIV3.HttpMethods.POST ? createPageTemplate(view) : updatePageTemplate(view)

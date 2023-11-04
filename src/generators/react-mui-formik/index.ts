@@ -77,12 +77,12 @@ export default class ReactMuiFormikGenerator implements CodeGenerator {
   private readonly _apiGenerator = new ApiGenerator()
   private readonly _routeGenerator = new RouteGenerator()
 
-  generate(options: View[], viewOnly?: boolean, project?: ProjectConfiguration): GeneratorContent[] {
+  async generate(options: View[], viewOnly?: boolean, project?: ProjectConfiguration): Promise<GeneratorContent[]> {
     if (!options) return []
 
     const content: GeneratorContent[] = []
     if (!viewOnly) {
-      // content.push(...this._apiGenerator.generate(project))
+      content.push(... await this._apiGenerator.generate(project))
       content.push(this._routeGenerator.generate(options))
     }
 

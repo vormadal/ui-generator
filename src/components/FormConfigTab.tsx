@@ -22,16 +22,17 @@ function FormConfigTab({ active, tab, view }: Props) {
 
   useEffect(() => {
     if (!view || !generator) return
-    setPreview(
-      generator
-        .generate([view], true)
-        .map(
-          (x) => `// ${x.name}
-    ${x.content}
 
+    generator.generate([view], true).then((result) =>
+      setPreview(
+        result
+          .map(
+            (x) => `// ${x.name}
+    ${x.content}
     `
-        )
-        .join('')
+          )
+          .join('')
+      )
     )
   }, [generator, view])
 

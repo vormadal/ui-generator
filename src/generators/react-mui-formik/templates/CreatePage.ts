@@ -7,8 +7,7 @@ export function createPageTemplate(view: View) {
   const createEndpointName = view.getOption('createEndpointName')
 
   return `
-import { Button, Grid, Typography } from '@mui/material'
-import { Loading, useData, useRequest, useToast } from '@vormadal/react-mui'
+import { Grid, Typography } from '@mui/material'
 import { ${name} } from '../components/${name}' //TODO get this import dynamically
 import { Api } from '../api' //TODO get this import dynamically
 import { ${entityTypeName} } from '../api/Client'

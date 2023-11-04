@@ -12,7 +12,7 @@ export interface CodeGenerator {
    */
   get name(): string
 
-  generate(options: View[], viewOnly?: boolean, project?: ProjectConfiguration): GeneratorContent[]
+  generate(options: View[], viewOnly?: boolean, project?: ProjectConfiguration): Promise<GeneratorContent[]>
 
   supportsView(endpoint: Endpoint): boolean
   supportsField(schema: OpenAPIV3.SchemaObject, endpoint: Endpoint): boolean
