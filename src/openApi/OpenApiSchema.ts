@@ -22,8 +22,18 @@ export default class OpenApiSchema {
     this._views = getViews(this.endpoints, this)
   }
 
-  public resolveReference = <T>(ref: OpenAPIV3.ReferenceObject | T) => {
+  public resolveReference = <T = OpenAPIV3.SchemaObject>(ref: OpenAPIV3.ReferenceObject | T) => {
     return resolveReferenceObject(this._components, ref)
+  }
+
+  public resolveListReference = <T = OpenAPIV3.SchemaObject>(ref?: OpenAPIV3.ReferenceObject | T): T => {
+    let refObj: OpenAPIV3.ReferenceObject | T = ref
+    if ((ref as OpenAPIV3.SchemaObject)?.type === 'array') {
+      refObj = (ref as OpenAPIV3.ArraySchemaObject).items as T
+    }
+
+    // TODO - currently we assume this is always a reference object not a schema object
+    return resolveReferenceObject<T>(this._components, refObj)
   }
 
   public resolveEndpoint = (method: OpenAPIV3.HttpMethods, path: string) => {

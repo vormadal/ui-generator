@@ -2,7 +2,6 @@ import { OpenAPIV3 } from 'openapi-types'
 import { ComponentImport } from '../../configuration/ComponentImport'
 import { FieldGenerator } from '../../configuration/FieldGenerator'
 import { FieldOptions } from '../../configuration/FieldOptions'
-import GeneratorContent from '../../configuration/GeneratorContent'
 
 export default class RMFBooleanFieldGenerator implements FieldGenerator {
   isSupporting(schema: OpenAPIV3.SchemaObject): boolean {
@@ -15,7 +14,7 @@ export default class RMFBooleanFieldGenerator implements FieldGenerator {
     return [new ComponentImport('@mui/material', ['FormControlLabel', 'Checkbox'])]
   }
 
-  generate(options: FieldOptions, indents: number): GeneratorContent[] {
+  generate = (options: FieldOptions, indents: number): string => {
     const { name, label, isRequired } = options
 
     const prefix = new Array(indents || 0).fill('\t').join('')
@@ -30,6 +29,6 @@ export default class RMFBooleanFieldGenerator implements FieldGenerator {
       `/>`
     ]
 
-    return [new GeneratorContent('partial', content.filter((x) => !!x.trim()).join(`\n${prefix}`))]
+    return content.filter((x) => !!x.trim()).join(`\n${prefix}`)
   }
 }

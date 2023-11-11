@@ -1,17 +1,18 @@
 import { OpenAPIV3 } from 'openapi-types'
 import { FirstUppercase } from '../../../utils/stringHelpers'
+import { View } from '../../../configuration/View'
 
-export function resolveViewName(method: OpenAPIV3.HttpMethods, entityName: string, content: OpenAPIV3.SchemaObject) {
+export function resolveViewName(view: View) {
   let prefix = ''
 
-  let name = FirstUppercase(entityName)
+  let name = FirstUppercase(view.entityName)
   if (name.endsWith('Dto')) {
     name = name.substring(0, name.length - 3)
   }
 
-  switch (method) {
+  switch (view.endpoint.method) {
     case OpenAPIV3.HttpMethods.GET:
-      prefix = content.type == 'array' ? 'List' : 'Detail'
+      prefix = view.isListView ? 'List' : 'Detail'
       break
     case OpenAPIV3.HttpMethods.POST:
       prefix = 'Create'
@@ -20,7 +21,7 @@ export function resolveViewName(method: OpenAPIV3.HttpMethods, entityName: strin
       prefix = 'Update'
       break
     default:
-      prefix = method.toLowerCase()
+      prefix = view.endpoint.method.toLowerCase()
       break
   }
   if (name.startsWith(prefix)) prefix = ''

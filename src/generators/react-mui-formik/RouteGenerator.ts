@@ -1,34 +1,61 @@
 import { View } from '../../configuration/View'
-import GeneratorContent from '../../configuration/GeneratorContent'
+import GeneratorContent, { GeneratorContentType } from '../../configuration/GeneratorContent'
+import { OpenAPIV3 } from 'openapi-types'
 
-export default class RouteGenerator {
-  generate(views: View[]): GeneratorContent {
-    const viewNames = views.map((x) => x.getOption('pageName'))
+export interface RMFRoute {
+  path: string
+  pageName: string
+  parameters: OpenAPIV3.ParameterObject[]
+}
+export default class RouteGenerator implements GeneratorContent {
+  constructor(public readonly views: View[]) {}
+
+  get type(): GeneratorContentType {
+    return 'file'
+  }
+
+  get directory(): string {
+    return 'src'
+  }
+
+  get name(): string {
+    return 'AppRoutes'
+  }
+
+  get filename(): string {
+    return `${this.directory}/${this.name}.tsx`
+  }
+
+  getRoutes = (views: View[]): RMFRoute[] => {
+    return views.map((x) => ({
+      path: `${x.getOption('route')}/${x.endpoint.method}`,
+      pageName: x.getOption('pageName'),
+      parameters: x.parameters
+    }))
+  }
+
+  generate = (): Promise<string> => {
+    const routes = this.getRoutes(this.views)
     const imports = [
-      `import { Route, HashRouter as Router, Routes, useNavigate, useSearchParams } from 'react-router-dom'`,
-      ...viewNames.map((x) => `import ${x} from './pages/${x}'`)
+      `import { Route, Routes } from 'react-router-dom'`,
+      ...routes.map((x) => `import ${x.pageName} from './pages/${x.pageName}'`)
     ].join('\n')
 
-    const routes = views
-      .map((x) => [
-        `<Route`, 
-        `   path="${x.getOption('route')}"`, 
-        `   element={<${x.getOption('pageName')} />}`, 
-        `/>`
-      ].join('\n\t\t\t\t'))
+    const routeComponents = routes
+      .map((x) => [`<Route`, `   path="${x.path}"`, `   element={<${x.pageName} />}`, `/>`].join('\n\t\t\t\t'))
       .join('\n\t\t\t')
-    const content = `${imports}
 
+    return Promise.resolve(`${imports}
 
-export function AppRoutes() {
+function ${this.name}() {
   return (
       <Routes>
-        ${routes}
+        ${routeComponents}
       </Routes>
   )
 }
-    `
 
-    return new GeneratorContent('file', content, `src/AppRoutes.tsx`)
+export default ${this.name}
+    `)
   }
 }

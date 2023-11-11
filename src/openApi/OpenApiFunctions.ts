@@ -23,20 +23,27 @@ export function resolveReferenceObject<T>(
 
 export function getEndpointFields(endpoint: Endpoint, spec: OpenApiSchema): FieldOptions[] {
   const requestBody = spec.resolveReference<OpenAPIV3.RequestBodyObject>(endpoint.source?.requestBody)
-  if (!requestBody) return []
+  const responseBody = spec.resolveReference<OpenAPIV3.ResponseObject>(
+    endpoint.source?.responses && endpoint.source.responses[200]
+  )
+  if (!requestBody && !responseBody) return []
 
-  const requestBodySchema = spec.resolveReference<OpenAPIV3.SchemaObject>(
-    requestBody?.content['application/json']?.schema
+  const requestBodySchema = spec.resolveListReference(requestBody?.content['application/json']?.schema)
+
+  const responseBodySchema = spec.resolveListReference(
+    responseBody?.content && responseBody?.content['application/json']?.schema
   )
 
-  if (requestBodySchema?.type !== 'object' || !requestBodySchema?.properties) {
+  const bodySchema = requestBodySchema || responseBodySchema
+
+  if (!bodySchema?.properties) {
     //TODO handle array and simple types or is this ever relevant?
     return []
   }
 
   const properties: FieldOptions[] = []
-  for (const propName of Object.keys(requestBodySchema?.properties || {})) {
-    const propertySchema = spec.resolveReference<OpenAPIV3.SchemaObject>(requestBodySchema?.properties[propName])
+  for (const propName of Object.keys(bodySchema?.properties || {})) {
+    const propertySchema = spec.resolveReference<OpenAPIV3.SchemaObject>(bodySchema?.properties[propName])
 
     if (spec.generator.supportsField(propertySchema, endpoint)) {
       //TODO verify if type is correct
@@ -74,6 +81,8 @@ export function getViews(endpoints: Endpoint[], spec: OpenApiSchema): View[] {
     const fields = getEndpointFields(endpoint, spec)
     if (spec.generator.supportsView(endpoint)) {
       const view = new View(endpoint, fields, spec)
+
+      console.log('view', endpoint.method, endpoint.path, view.entityTypeName)
       //TODO this is a temporary ugly fix
       if (view.entityTypeName !== 'Unknown') views.push(view)
     }

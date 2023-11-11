@@ -1,16 +1,17 @@
-import { View } from '../../../configuration/View'
+import { View } from '../../../../configuration/View'
+import { RMFContext } from '../../RMFContext'
 
-export function updatePageTemplate(view: View) {
+export function updatePageTemplate(view: View, ctx: RMFContext) {
   const { entityPropertyName, entityTypeName } = view ?? {}
   const name = view.getOption('name')
   const pageName = view.getOption('pageName')
   const getEndpointName = view.getOption('getEndpointName')
   
   return `
-import { Button, Grid, Typography } from '@mui/material'
+import { Grid, Typography } from '@mui/material'
 import { Loading, useData, useRequest, useToast } from '@vormadal/react-mui'
 import { ${name} } from '../components/${name}'
-import { ${entityTypeName} } from '../api/Client'
+import { ${entityTypeName} } from '../api/ApiClient' //TODO get this import dynamically
 import { Api } from '../api'
 import { useParams } from 'react-router-dom'
 

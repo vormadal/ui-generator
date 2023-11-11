@@ -1,8 +1,9 @@
 export type GeneratorContentType = 'file' | 'partial' | 'script'
-export default class GeneratorContent {
-  constructor(
-    public readonly type: GeneratorContentType,
-    public readonly content: string,
-    public readonly name?: string
-  ) {}
+export default interface GeneratorContent {
+  readonly type: GeneratorContentType
+  readonly filename: string
+  readonly directory: string
+  readonly name: string
+
+  generate(): Promise<string>
 }

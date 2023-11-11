@@ -1,8 +1,14 @@
-import GeneratorContent from '../../configuration/GeneratorContent'
+import GeneratorContent, { GeneratorContentType } from '../../configuration/GeneratorContent'
 import ProjectConfiguration from '../../system/ProjectConfiguration'
 
-export default class ApiGenerator {
-  get location() {
+export default class ApiGenerator implements GeneratorContent {
+  constructor(public readonly project: ProjectConfiguration) {}
+
+  get type(): GeneratorContentType {
+    return 'file'
+  }
+
+  get directory() {
     return 'src/api'
   }
 
@@ -10,25 +16,27 @@ export default class ApiGenerator {
     return 'ApiClient'
   }
 
-  relativePath = (to: string) => {
-    return to //TODO
-    // return path.relative(to, this.location)
+  get name() {
+    return 'index'
   }
 
-  generate = async (project: ProjectConfiguration): Promise<GeneratorContent[]> => {
-    const packageJson = JSON.parse(await window.electronAPI.readFile(`${project.projectDirectory}/package.json`))
-    if (!packageJson.scripts) {
-      packageJson.scripts = {}
-    }
-    const script = 'api'
-    packageJson.scripts[
-      script
-    ] = `nswag openapi2tsclient /Input:${project.openapiSpecPath} /output:src/api/${this.ApiClientclassName}.ts /className:${this.ApiClientclassName} /template:axios`
+  get filename() {
+    return `${this.directory}/${this.name}.ts`
+  }
 
-    return [
-      new GeneratorContent('file', JSON.stringify(packageJson, undefined, 2), 'package.json'),
-      new GeneratorContent('script', `npm install -D nswag`),
-      new GeneratorContent('script', `npm run ${script}`)
-    ]
+  get scriptName() {
+    return 'api'
+  }
+
+  generate = async (): Promise<string> => {
+    await window.electronAPI.runScript(this.project.projectDirectory, `npm install -D nswag`)
+
+    await window.electronAPI.runScript(this.project.projectDirectory, `npm run ${this.scriptName}`)
+
+    return `
+import { ${this.ApiClientclassName} } from "./${this.ApiClientclassName}";
+
+export const Api = new ${this.ApiClientclassName}()
+`
   }
 }

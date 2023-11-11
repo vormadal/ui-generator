@@ -1,39 +1,38 @@
 import { OpenAPIV3 } from 'openapi-types'
 import { CodeGenerator } from '../../configuration/CodeGenerator'
-import { View } from '../../configuration/View'
 import GeneratorContent from '../../configuration/GeneratorContent'
 import { Option, TextOption } from '../../configuration/Option'
-import { FirstUppercase } from '../../utils/stringHelpers'
-import RMFBooleanFieldGenerator from './RMFBooleanFieldGenerator'
-import RMFFormGenerator from './RMFFormGenerator'
-import RMFTextFieldGenerator from './RMFTextFieldGenerator'
-import RMFDateTimeFieldGenerator from './RMFDateTimeFieldGenerator'
-import RMFDateFieldGenerator from './RMFDateFieldGenerator'
-import RouteGenerator from './RouteGenerator'
+import { View } from '../../configuration/View'
+import Endpoint from '../../openApi/Endpoint'
+import OpenApiSchema from '../../openApi/OpenApiSchema'
 import ProjectConfiguration from '../../system/ProjectConfiguration'
 import ApiGenerator from './ApiGenerator'
-import Endpoint from '../../openApi/Endpoint'
+import AppGenerator from './AppGenerator'
+import NavigationGenerator from './NavigationGenerator'
+import RMFBooleanFieldGenerator from './RMFBooleanFieldGenerator'
+import RMFDateFieldGenerator from './RMFDateFieldGenerator'
+import RMFDateTimeFieldGenerator from './RMFDateTimeFieldGenerator'
+import RMFFormGenerator from './RMFFormGenerator'
+import RMFTextFieldGenerator from './RMFTextFieldGenerator'
+import RouteGenerator from './RouteGenerator'
 import { resolveViewName } from './utils/ViewUtils'
-import OpenApiSchema from '../../openApi/OpenApiSchema'
+import { RMFContext } from './RMFContext'
+import { FieldGenerator } from '../../configuration/FieldGenerator'
+import RMFPageGenerator from './RMFPageGenerator'
+import PackageJsonGenerator from './PackageJsonGenerator'
 
-//TODO move to a generic place
-
-const fieldGenerators = [
+const fieldGenerators: FieldGenerator[] = [
   new RMFBooleanFieldGenerator(),
   new RMFDateTimeFieldGenerator(),
   new RMFDateFieldGenerator(),
   new RMFTextFieldGenerator()
 ]
 export default class ReactMuiFormikGenerator implements CodeGenerator {
-  getViewOptions(
-    endpoint: Endpoint,
-    entityName: string,
-    schema: OpenAPIV3.SchemaObject,
-    spec: OpenApiSchema
-  ): Option[] {
-    const name = resolveViewName(endpoint.method, entityName, schema)
+  getViewOptions(view: View, spec: OpenApiSchema): Option[] {
+    const { endpoint } = view
+    const name = resolveViewName(view)
 
-    const viewSuffix = [OpenAPIV3.HttpMethods.PUT, OpenAPIV3.HttpMethods.POST].includes(endpoint.method)
+    const viewSuffix = [OpenAPIV3.HttpMethods.PUT, OpenAPIV3.HttpMethods.POST].includes(view.endpoint.method)
       ? 'Form'
       : 'View'
     const options: Option[] = [
@@ -72,26 +71,31 @@ export default class ReactMuiFormikGenerator implements CodeGenerator {
     return 'react-mui-formik'
   }
 
-  private readonly _formGenerator = new RMFFormGenerator(fieldGenerators)
+  generate(views: View[], viewOnly?: boolean, project?: ProjectConfiguration): GeneratorContent[] {
+    if (!views) return []
 
-  private readonly _apiGenerator = new ApiGenerator()
-  private readonly _routeGenerator = new RouteGenerator()
-
-  async generate(options: View[], viewOnly?: boolean, project?: ProjectConfiguration): Promise<GeneratorContent[]> {
-    if (!options) return []
-
+    const context = new RMFContext(fieldGenerators)
     const content: GeneratorContent[] = []
     if (!viewOnly) {
-      content.push(... await this._apiGenerator.generate(project))
-      content.push(this._routeGenerator.generate(options))
+      const api = new ApiGenerator(project)
+      const packageJson = new PackageJsonGenerator(project, api)
+      const route = new RouteGenerator(views)
+      const navigation = new NavigationGenerator(views, route, project)
+      const app = new AppGenerator()
+      const pages = views.map((x) => new RMFPageGenerator(x, context))
+      content.push(
+        // packageJson,
+        // api,
+        route,
+        navigation,
+        app,
+        ...pages
+      )
     }
 
-    return options.reduce<GeneratorContent[]>((list, val) => {
-      const generated = this._formGenerator.generate(val)
-      for (const content of generated) {
-        list.push(content)
-      }
-      return list
-    }, content)
+    const forms = views.map((x) => new RMFFormGenerator(x, context))
+    content.push(...forms)
+
+    return content
   }
 }

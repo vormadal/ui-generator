@@ -1,6 +1,7 @@
-import { View } from '../../../configuration/View'
+import { View } from '../../../../configuration/View'
+import { RMFContext } from '../../RMFContext'
 
-export function createPageTemplate(view: View) {
+export function createPageTemplate(view: View, ctx: RMFContext) {
   const { entityTypeName, entityPropertyName } = view ?? {}
   const name = view.getOption('name')
   const pageName = view.getOption('pageName')
@@ -10,7 +11,7 @@ export function createPageTemplate(view: View) {
 import { Grid, Typography } from '@mui/material'
 import { ${name} } from '../components/${name}' //TODO get this import dynamically
 import { Api } from '../api' //TODO get this import dynamically
-import { ${entityTypeName} } from '../api/Client'
+import { ${entityTypeName} } from '../api/ApiClient' //TODO get this import dynamically
 
 function ${pageName}() {
     function handleSubmit(${entityPropertyName}: ${entityTypeName}){

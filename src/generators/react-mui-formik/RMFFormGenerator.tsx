@@ -1,74 +1,41 @@
-import { ComponentImport } from '../../configuration/ComponentImport'
-import { FieldGenerator } from '../../configuration/FieldGenerator'
-import { FieldOptions } from '../../configuration/FieldOptions'
-import { View } from '../../configuration/View'
-import GeneratorContent from '../../configuration/GeneratorContent'
-import { groupBy } from '../../utils/arrayExtensions'
-import DefaultFieldGenerator from '../default/DefaultFieldGenerator'
 import { OpenAPIV3 } from 'openapi-types'
-import { createFormTeplate } from './templates/CreateForm'
-import { updateFormTeplate } from './templates/UpdateForm'
-import { createPageTemplate } from './templates/CreatePage'
-import { updatePageTemplate } from './templates/UpdatePage'
+import GeneratorContent, { GeneratorContentType } from '../../configuration/GeneratorContent'
+import { View } from '../../configuration/View'
+import { RMFContext } from './RMFContext'
+import { createFormTeplate as createFormTemplate } from './templates/create/CreateForm'
+import { updateFormTeplate as updateFormTemplate } from './templates/update/UpdateForm'
+import { detailsViewTemplate } from './templates/view/DetailsView'
 
-export default class RMFFormGenerator {
-  constructor(private readonly _fieldGenerators: FieldGenerator[]) {}
-
-  getImports(options: View): ComponentImport[] {
-    const values = [
-      new ComponentImport('formik', ['Formik', 'Form']),
-      new ComponentImport('@mui/material', ['Button']),
-      new ComponentImport('../api/Client', [options.entityTypeName])
-    ]
-    return values
-  }
-
-  getFieldGenerator(options: FieldOptions): FieldGenerator {
-    return this._fieldGenerators.find((x) => x.isSupporting(options.schema)) || new DefaultFieldGenerator()
-  }
-
-  generate(view: View): GeneratorContent[] {
-    const name = view.getOption('name')
-
-    const combinedImports = [
-      ...this.getImports(view),
-      ...([] as ComponentImport[]).concat(
-        ...view.fields.map((fieldOption) => this.getFieldGenerator(fieldOption).imports)
-      )
-    ]
-
-    const groupedImports = groupBy(combinedImports, (x) => x.from)
-    const mergedImports = Object.keys(groupedImports).map((x) =>
-      groupedImports[x].reduce((merged, cur) => {
-        return merged.merge(cur)
-      })
-    )
-
-    const imports = mergedImports.map((x) => x.toString()).join('\n')
-
-    const fieldIndents = 3
-
-    const fields = ([] as GeneratorContent[]).concat(
-      ...view.fields.map((x) => this.getFieldGenerator(x).generate(x, fieldIndents))
-    )
-    const formContent = `
-${imports}
-
-${
-  view.endpoint.method === OpenAPIV3.HttpMethods.POST
-    ? createFormTeplate(view, fields)
-    : updateFormTeplate(view, fields)
+type ViewTemplateType = {
+  [key: string]: (view: View, ctx: RMFContext) => string
 }
-    `
 
-    const pageName = view.getOption('pageName')
+const viewTemplates: ViewTemplateType = {
+  [OpenAPIV3.HttpMethods.POST]: createFormTemplate,
+  [OpenAPIV3.HttpMethods.PUT]: updateFormTemplate,
+  [OpenAPIV3.HttpMethods.GET]: detailsViewTemplate
+}
 
-    const pageContent =
-      view.endpoint.method === OpenAPIV3.HttpMethods.POST ? createPageTemplate(view) : updatePageTemplate(view)
+export default class RMFFormGenerator implements GeneratorContent {
+  constructor(private readonly view: View, private readonly ctx: RMFContext) {}
 
-    return [
-      new GeneratorContent('file', formContent, `src/components/${name}.tsx`),
-      new GeneratorContent('file', pageContent, `src/pages/${pageName}.tsx`)
-    ]
+  get type(): GeneratorContentType {
+    return 'file'
+  }
+
+  get directory() {
+    return 'src/components'
+  }
+
+  get name() {
+    return this.view.getOption('name')
+  }
+
+  get filename() {
+    return `${this.directory}/${this.name}.tsx`
+  }
+
+  generate = async (): Promise<string> => {
+    return viewTemplates[this.view.endpoint.method](this.view, this.ctx)
   }
 }

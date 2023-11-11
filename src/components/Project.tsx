@@ -90,15 +90,16 @@ function Project() {
 
   async function handleGenerate() {
     const content = await generator.generate(project.schema.views, false, project)
-    const files = content.filter(x => x.type === 'file')
-    const scripts = content.filter(x => x.type === 'script')
 
-    for(const script of scripts){
-      console.log('running script', script.name)
-      await window.electronAPI.runScript(project.projectDirectory, script.content)
-    }    
-    const promises = files.map((x) => window.electronAPI.writeFile(`${project.projectDirectory}/${x.name}`, x.content))
-    await Promise.all(promises)
+    for (const c of content) {
+      console.log('generating ', c.name)
+      const result = await c.generate()
+      if (c.type === 'file') {
+        await window.electronAPI.writeFile(`${project.projectDirectory}/${c.filename}`, result)
+      }
+    }
+
+    console.log('generation done')
   }
 
   async function handleCreateProject() {
@@ -120,9 +121,7 @@ function Project() {
       return
     }
     try {
-      const result = await axios.get(e.target.value, {
-        
-      })
+      const result = await axios.get(e.target.value, {})
       console.log('result', result.data)
     } catch (e) {
       console.log('axios error', e)
@@ -136,11 +135,11 @@ function Project() {
 
   async function handleSave() {
     if (systemConfig) window.electronAPI.saveSystemConfiguration(systemConfig)
-    
-    if (project){
+
+    if (project) {
       const copy = JSON.parse(JSON.stringify(project))
       window.electronAPI.saveProject(copy)
-    } 
+    }
   }
 
   async function handleGeneratorChange(e: React.ChangeEvent<HTMLInputElement>) {

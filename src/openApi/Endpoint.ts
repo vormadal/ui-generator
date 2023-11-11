@@ -4,6 +4,8 @@ import { FirstLowerCase } from '../utils/stringHelpers'
 export default class Endpoint {
   public operationName: string
   constructor(public method: OpenAPIV3.HttpMethods, public path: string, public source: OpenAPIV3.OperationObject) {
+    // TODO does not handle if operationId is duplicate.
+    // nswag is able to handle it though
     this.operationName = FirstLowerCase(source.operationId || getOperationName(this))
   }
 }
@@ -12,6 +14,7 @@ function getOperationName(endpoint: Endpoint): string {
   const parts = endpoint.path.split('/')
   let part = 0
   let suffix = ''
+
   switch (endpoint.method) {
     case OpenAPIV3.HttpMethods.GET:
       if (endpoint.path.endsWith('}')) {

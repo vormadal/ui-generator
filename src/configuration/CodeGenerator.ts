@@ -12,15 +12,13 @@ export interface CodeGenerator {
    */
   get name(): string
 
-  generate(options: View[], viewOnly?: boolean, project?: ProjectConfiguration): Promise<GeneratorContent[]>
+  generate(options: View[], viewOnly?: boolean, project?: ProjectConfiguration): GeneratorContent[]
 
   supportsView(endpoint: Endpoint): boolean
   supportsField(schema: OpenAPIV3.SchemaObject, endpoint: Endpoint): boolean
 
   getViewOptions(
-    endpoint: Endpoint,
-    entityName: string,
-    schema: OpenAPIV3.SchemaObject, // response or request schema depending on operation method
+    view: View,
     spec: OpenApiSchema
   ): Option[]
 }
