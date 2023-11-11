@@ -74,15 +74,19 @@ export default class ReactMuiFormikGenerator implements CodeGenerator {
   generate(views: View[], viewOnly?: boolean, project?: ProjectConfiguration): GeneratorContent[] {
     if (!views) return []
 
-    const context = new RMFContext(fieldGenerators)
+    const context = new RMFContext(fieldGenerators, views, project)
     const content: GeneratorContent[] = []
+    const api = new ApiGenerator(project)
+    const packageJson = new PackageJsonGenerator(project, api)
+    const route = new RouteGenerator(views)
+    const navigation = new NavigationGenerator(views, route, project)
+    const app = new AppGenerator()
+    const pages = views.map((x) => new RMFPageGenerator(x, context))
+
+    context.apiGenerator = api
+    context.routeGenerator = route
     if (!viewOnly) {
-      const api = new ApiGenerator(project)
-      const packageJson = new PackageJsonGenerator(project, api)
-      const route = new RouteGenerator(views)
-      const navigation = new NavigationGenerator(views, route, project)
-      const app = new AppGenerator()
-      const pages = views.map((x) => new RMFPageGenerator(x, context))
+      
       content.push(
         // packageJson,
         // api,

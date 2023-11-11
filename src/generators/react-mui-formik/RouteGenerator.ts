@@ -27,11 +27,24 @@ export default class RouteGenerator implements GeneratorContent {
   }
 
   getRoutes = (views: View[]): RMFRoute[] => {
-    return views.map((x) => ({
-      path: `${x.getOption('route')}/${x.endpoint.method}`,
-      pageName: x.getOption('pageName'),
-      parameters: x.parameters
-    }))
+    return views.map((x) => this.getRoute(x))
+  }
+
+  getRoute = (view: View): RMFRoute => {
+    return {
+      path: `${view.getOption('route')}/${view.endpoint.method}`,
+      pageName: view.getOption('pageName'),
+      parameters: view.parameters
+    }
+  }
+
+  getRouteTo = (to: View, parameters: { [key: string]: string }) => {
+    const route = this.getRoute(to)
+    let link = route.path
+    for (const param of route.parameters) {
+      link = link.replace(`:${param.name}`, parameters[param.name])
+    }
+    return link
   }
 
   generate = (): Promise<string> => {
